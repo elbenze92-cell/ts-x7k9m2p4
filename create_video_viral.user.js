@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         *create_video_viral.user 동영상 프롬프트
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
-// @description  Remix 스타일의 고품질 Sora 프롬프트 자동 생성 (JSON 저장)
+// @version      2.0.0
+// @description  Remix 스타일의 고품질 Sora 프롬프트 자동 생성 (JSON 저장) - 안정화 버전
 // @match        https://claude.ai/project/019acaca-ea51-707c-8a8e-32e084dee17d
 // @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/create_viral.user.js
 // @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/create_viral.user.js
@@ -408,6 +408,359 @@ WHY_VIRAL:
     ];
 
     // ============================================================
+    // 🔧 핵심 유틸리티 함수들 (CREATE/REMIX 방식)
+    // ============================================================
+
+    let currentStep = 0;
+    let totalSteps = STEP_PROMPTS.length;
+    let selectedCategory = 'auto';
+    let selectedCount = 7;
+    let allResponses = [];
+
+    // Claude 응답 중인지 체크
+    function isClaudeResponding() {
+        const stopButton = document.querySelector('button[aria-label="Stop response"]') ||
+                          document.querySelector('button[aria-label="응답 중단"]');
+        return stopButton !== null;
+    }
+
+    // 응답 완료까지 대기
+    async function waitForResponseComplete(maxWait = 1800000) {
+        const startTime = Date.now();
+
+        updateStatus('⏳ Claude 응답 대기 중...', '#FF9800');
+        let responseStarted = false;
+
+        // 1단계: 응답 시작 대기
+        for (let i = 0; i < 40; i++) {
+            if (isClaudeResponding()) {
+                responseStarted = true;
+                updateStatus('✍️ Claude 응답 중...', '#2196F3');
+                break;
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        if (!responseStarted) {
+            updateStatus('✅ 응답 완료 (즉시)', '#4CAF50');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return true;
+        }
+
+        // 2단계: 응답 완료 대기
+        let checkCount = 0;
+        while (isClaudeResponding()) {
+            const elapsed = Date.now() - startTime;
+
+            if (elapsed > maxWait) {
+                updateStatus('⚠️ 응답 타임아웃', '#f44336');
+                throw new Error('응답 타임아웃');
+            }
+
+            checkCount++;
+            if (checkCount % 30 === 0) {
+                const elapsedMin = Math.floor(elapsed / 60000);
+                const elapsedSec = Math.floor((elapsed % 60000) / 1000);
+                updateStatus(`   ⏳ 응답 대기 중... (${elapsedMin}분 ${elapsedSec}초 경과)`, '#FF9800');
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        updateStatus('✅ Claude 응답 완료!', '#4CAF50');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return true;
+    }
+
+    // Continue 버튼 처리
+    async function handleContinue() {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const continueBtn = Array.from(document.querySelectorAll('button')).find(
+            btn => btn.textContent.includes('Continue') || btn.textContent.includes('계속')
+        );
+
+        if (continueBtn) {
+            continueBtn.click();
+            updateStatus('✅ Continue 버튼 클릭됨', '#4CAF50');
+            return true;
+        }
+        return false;
+    }
+
+    // 응답 수집 (CREATE/REMIX 방식)
+    function collectResponse() {
+        try {
+            const responses = document.querySelectorAll('div[class*="font-claude-response"][class*="leading-"]');
+            console.log(`🔍 font-claude-response 개수: ${responses.length}`);
+
+            let fullText = '';
+
+            if (responses.length > 0) {
+                const lastResponse = responses[responses.length - 1];
+
+                const markdownDiv = lastResponse.querySelector('[class*="standard-markdown"]') ||
+                                   lastResponse.querySelector('[class*="progressive-markdown"]');
+
+                if (markdownDiv) {
+                    fullText = markdownDiv.innerText.trim();
+                }
+
+                if (!fullText || fullText.length < 50) {
+                    fullText = lastResponse.innerText.trim();
+                }
+            }
+
+            if (!fullText || fullText.length < 50) {
+                const allDivs = document.querySelectorAll('div[class*="font-claude-response"]');
+                let maxText = '';
+                allDivs.forEach(div => {
+                    const text = div.innerText.trim();
+                    if (text.length > maxText.length && text.length < 50000) {
+                        maxText = text;
+                    }
+                });
+                if (maxText.length > 50) {
+                    fullText = maxText;
+                }
+            }
+
+            console.log(`📝 응답 수집: ${fullText.length}글자`);
+
+            // 마지막 단계일 때만 localStorage 저장
+            if (currentStep === totalSteps) {
+                localStorage.setItem('SORA_PROMPTS_RAW', fullText.trim());
+                window.SORA_PROMPTS_RAW = fullText.trim();
+                console.log('✅ 최종 응답 저장:', fullText.trim().length + '글자');
+            }
+
+            return fullText;
+        } catch (error) {
+            console.error('❌ collectResponse 오류:', error);
+            return '';
+        }
+    }
+
+    // 프롬프트 입력 (CREATE/REMIX 방식 - 재시도 포함)
+    async function inputPrompt(promptText, maxRetries = 5) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                updateStatus(`[${attempt}/${maxRetries}] 메시지 전송 시도...`, '#2196F3');
+
+                const inputField = document.querySelector('div.ProseMirror[contenteditable="true"]') ||
+                                  document.querySelector('div[contenteditable="true"]');
+
+                if (!inputField) {
+                    throw new Error('입력 필드를 찾을 수 없습니다');
+                }
+
+                inputField.focus();
+                inputField.click();
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                inputField.innerHTML = '';
+
+                const lines = promptText.split('\n');
+                lines.forEach((line, index) => {
+                    if (line.trim()) {
+                        const p = document.createElement('p');
+                        p.textContent = line;
+                        inputField.appendChild(p);
+                    } else if (index < lines.length - 1) {
+                        inputField.appendChild(document.createElement('br'));
+                    }
+                });
+
+                inputField.dispatchEvent(new Event('input', { bubbles: true }));
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                let sendButton = document.querySelector('button[aria-label="Send message"]') ||
+                                document.querySelector('button[aria-label="메시지 보내기"]');
+
+                if (!sendButton) {
+                    const buttons = document.querySelectorAll('button');
+                    sendButton = Array.from(buttons).find(btn => {
+                        const svg = btn.querySelector('svg');
+                        if (!svg) return false;
+                        const path = svg.querySelector('path');
+                        if (!path) return false;
+                        const d = path.getAttribute('d');
+                        return d && d.includes('M208.49,120.49');
+                    });
+                }
+
+                if (!sendButton || sendButton.disabled) {
+                    throw new Error('전송 버튼 없음/비활성화');
+                }
+
+                sendButton.click();
+                updateStatus(`✅ 메시지 전송 성공!`, '#4CAF50');
+
+                await waitForResponseComplete();
+                return true;
+
+            } catch (error) {
+                updateStatus(`⚠️ 실패: ${error.message}`, '#f44336');
+
+                if (attempt < maxRetries) {
+                    const waitTime = attempt * 2;
+                    updateStatus(`   ${waitTime}초 후 재시도...`, '#FF9800');
+                    await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+                } else {
+                    throw error;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 상태 업데이트
+    function updateStatus(message, color = '#4CAF50') {
+        const statusDisplay = document.getElementById('status-display');
+        if (statusDisplay) {
+            const timestamp = new Date().toLocaleTimeString('ko-KR');
+            statusDisplay.innerHTML += `<div style="color: ${color}; margin-bottom: 5px;">[${timestamp}] ${message}</div>`;
+            statusDisplay.scrollTop = statusDisplay.scrollHeight;
+        }
+    }
+
+    // 진행바 업데이트
+    function updateProgress(step) {
+        const progressFill = document.getElementById('progress-fill');
+        const stepCount = document.getElementById('step-count');
+
+        if (progressFill && stepCount) {
+            const percentage = (step / totalSteps) * 100;
+            progressFill.style.width = percentage + '%';
+            stepCount.textContent = `${step} / ${totalSteps}`;
+        }
+    }
+
+    // ============================================================
+    // 🚀 메인 자동화 프로세스
+    // ============================================================
+
+    async function runAutomation() {
+        const startBtn = document.getElementById('start-btn');
+        const completeBtn = document.getElementById('complete-btn');
+
+        startBtn.disabled = true;
+        startBtn.style.opacity = '0.5';
+        startBtn.style.cursor = 'not-allowed';
+
+        updateStatus('🚀 Sora 프롬프트 생성 시작!', '#4CAF50');
+
+        for (let i = 0; i < STEP_PROMPTS.length; i++) {
+            currentStep = i + 1;
+            const step = STEP_PROMPTS[i];
+
+            updateProgress(currentStep);
+            updateStatus(`📍 ${currentStep}단계: ${step.name}`, '#2196F3');
+
+            let promptText = step.prompt;
+
+            // 사용자 입력 필요한 단계 처리
+            if (step.needsUserInput) {
+                promptText = promptText
+                    .replace(/{CATEGORY}/g, selectedCategory)
+                    .replace(/{COUNT}/g, selectedCount);
+            }
+
+            try {
+                const success = await inputPrompt(promptText);
+
+                if (!success) {
+                    updateStatus(`❌ ${step.name} 입력 실패`, '#f44336');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    i--; // 재시도
+                    continue;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Continue 버튼 처리
+                let continueCount = 0;
+                while (continueCount < 2) {
+                    const hasContinue = await handleContinue();
+                    if (hasContinue) {
+                        continueCount++;
+                        await waitForResponseComplete();
+                    } else {
+                        break;
+                    }
+                }
+
+            } catch (error) {
+                updateStatus(`⚠️ ${step.name} 처리 중 오류: ${error.message}`, '#f44336');
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                i--; // 재시도
+                continue;
+            }
+
+            const response = collectResponse();
+            allResponses.push({
+                step: currentStep,
+                name: step.name,
+                response: response
+            });
+
+            updateStatus(`✅ ${step.name} 완료`, '#4CAF50');
+
+            if (i < STEP_PROMPTS.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+        }
+
+        updateStatus('🔄 JSON 데이터 파싱 중...', '#2196F3');
+        await parseAndSaveJSON();
+
+        updateStatus('🎉 모든 단계 완료!', '#4CAF50');
+
+        completeBtn.disabled = false;
+        completeBtn.style.opacity = '1';
+        completeBtn.style.cursor = 'pointer';
+    }
+
+    // JSON 파싱 및 저장
+    async function parseAndSaveJSON() {
+        try {
+            const lastResponse = allResponses[allResponses.length - 1].response;
+
+            // JSON 추출 (마크다운 제거)
+            let jsonText = lastResponse;
+
+            // ```json ... ``` 제거
+            jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+
+            // 앞뒤 공백 및 불필요한 텍스트 제거
+            jsonText = jsonText.trim();
+
+            // JSON 시작/끝 찾기
+            const jsonStart = jsonText.indexOf('{');
+            const jsonEnd = jsonText.lastIndexOf('}');
+
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+                jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
+            }
+
+            // JSON 파싱
+            const soraData = JSON.parse(jsonText);
+
+            // localStorage 저장
+            localStorage.setItem('SORA_PROMPTS_JSON', JSON.stringify(soraData));
+            window.SORA_PROMPTS_JSON_FOR_PYTHON = JSON.stringify(soraData);
+
+            updateStatus(`💾 localStorage 저장 완료 (${soraData.sora_prompts.length}개 프롬프트)`, '#4CAF50');
+
+            console.log('✅ Sora JSON 저장 완료:', soraData);
+
+        } catch (error) {
+            updateStatus(`❌ JSON 파싱 실패: ${error.message}`, '#f44336');
+            console.error('JSON 파싱 에러:', error);
+            console.log('원본 응답:', allResponses[allResponses.length - 1].response);
+        }
+    }
+
+    // ============================================================
     // 🎨 UI 생성 (Remix 스타일)
     // ============================================================
 
@@ -420,7 +773,7 @@ WHY_VIRAL:
                 <div style="text-align: center; margin-bottom: 20px;">
                     <div style="font-size: 28px; margin-bottom: 5px;">🎬</div>
                     <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">Sora Script Generator</div>
-                    <div style="font-size: 12px; opacity: 0.9;">v2.0 - JSON 저장 방식</div>
+                    <div style="font-size: 12px; opacity: 0.9;">v2.0 - 안정화 버전</div>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
@@ -482,201 +835,6 @@ WHY_VIRAL:
         document.body.appendChild(panel);
 
         setupEventListeners();
-    }
-
-    // ============================================================
-    // 🎯 자동화 핵심 함수들
-    // ============================================================
-
-    let currentStep = 0;
-    let totalSteps = STEP_PROMPTS.length;
-    let selectedCategory = 'auto';
-    let selectedCount = 7;
-    let allResponses = [];
-
-    // Claude 응답 수집
-    function collectResponse() {
-        return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                const messages = document.querySelectorAll('[data-testid="user-message"], [data-testid="assistant-message"]');
-                if (messages.length > 0) {
-                    const lastMessage = messages[messages.length - 1];
-                    if (lastMessage.getAttribute('data-testid') === 'assistant-message') {
-                        const responseText = lastMessage.innerText || lastMessage.textContent;
-                        if (responseText && responseText.trim().length > 10) {
-                            clearInterval(checkInterval);
-                            resolve(responseText);
-                        }
-                    }
-                }
-            }, 1000);
-        });
-    }
-
-    // 프롬프트 입력
-    function inputPrompt(text) {
-        return new Promise((resolve) => {
-            const inputBox = document.querySelector('[contenteditable="true"]');
-            if (!inputBox) {
-                console.error('❌ 입력창을 찾을 수 없습니다');
-                resolve(false);
-                return;
-            }
-
-            inputBox.focus();
-            inputBox.innerText = text;
-
-            // React 이벤트 트리거
-            const inputEvent = new Event('input', { bubbles: true });
-            inputBox.dispatchEvent(inputEvent);
-
-            setTimeout(() => {
-                const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="전송"]');
-                if (sendBtn) {
-                    sendBtn.click();
-                    resolve(true);
-                } else {
-                    // Enter 키로 전송
-                    const enterEvent = new KeyboardEvent('keydown', {
-                        key: 'Enter',
-                        code: 'Enter',
-                        keyCode: 13,
-                        bubbles: true
-                    });
-                    inputBox.dispatchEvent(enterEvent);
-                    resolve(true);
-                }
-            }, 500);
-        });
-    }
-
-    // 상태 업데이트
-    function updateStatus(message, color = '#4CAF50') {
-        const statusDisplay = document.getElementById('status-display');
-        if (statusDisplay) {
-            const timestamp = new Date().toLocaleTimeString('ko-KR');
-            statusDisplay.innerHTML += `<div style="color: ${color}; margin-bottom: 5px;">[${timestamp}] ${message}</div>`;
-            statusDisplay.scrollTop = statusDisplay.scrollHeight;
-        }
-    }
-
-    // 진행바 업데이트
-    function updateProgress(step) {
-        const progressFill = document.getElementById('progress-fill');
-        const stepCount = document.getElementById('step-count');
-
-        if (progressFill && stepCount) {
-            const percentage = (step / totalSteps) * 100;
-            progressFill.style.width = percentage + '%';
-            stepCount.textContent = `${step} / ${totalSteps}`;
-        }
-    }
-
-    // 메인 자동화 프로세스
-    async function runAutomation() {
-        const startBtn = document.getElementById('start-btn');
-        const completeBtn = document.getElementById('complete-btn');
-
-        startBtn.disabled = true;
-        startBtn.style.opacity = '0.5';
-        startBtn.style.cursor = 'not-allowed';
-
-        updateStatus('🚀 Sora 프롬프트 생성 시작!', '#4CAF50');
-
-        for (let i = 0; i < STEP_PROMPTS.length; i++) {
-            currentStep = i + 1;
-            const step = STEP_PROMPTS[i];
-
-            updateProgress(currentStep);
-            updateStatus(`📍 ${currentStep}단계: ${step.name}`, '#2196F3');
-
-            let promptText = step.prompt;
-
-            // 사용자 입력 필요한 단계 처리
-            if (step.needsUserInput) {
-                promptText = promptText
-                    .replace(/{CATEGORY}/g, selectedCategory)
-                    .replace(/{COUNT}/g, selectedCount);
-            }
-
-            // 프롬프트 입력
-            const inputSuccess = await inputPrompt(promptText);
-            if (!inputSuccess) {
-                updateStatus('❌ 프롬프트 입력 실패', '#f44336');
-                break;
-            }
-
-            updateStatus(`⏳ Claude 응답 대기 중...`, '#FF9800');
-
-            // 응답 대기
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // 응답 수집
-            const response = await collectResponse();
-            allResponses.push({
-                step: currentStep,
-                name: step.name,
-                response: response
-            });
-
-            updateStatus(`✅ ${step.name} 완료`, '#4CAF50');
-
-            // 다음 단계 대기
-            if (i < STEP_PROMPTS.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 3000));
-            }
-        }
-
-        // 마지막 응답에서 JSON 파싱
-        updateStatus('🔄 JSON 데이터 파싱 중...', '#2196F3');
-        await parseAndSaveJSON();
-
-        updateStatus('🎉 모든 단계 완료!', '#4CAF50');
-
-        // 완료 버튼 활성화
-        completeBtn.disabled = false;
-        completeBtn.style.opacity = '1';
-        completeBtn.style.cursor = 'pointer';
-    }
-
-    // JSON 파싱 및 저장
-    async function parseAndSaveJSON() {
-        try {
-            const lastResponse = allResponses[allResponses.length - 1].response;
-
-            // JSON 추출 (마크다운 제거)
-            let jsonText = lastResponse;
-
-            // ```json ... ``` 제거
-            jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-
-            // 앞뒤 공백 및 불필요한 텍스트 제거
-            jsonText = jsonText.trim();
-
-            // JSON 시작/끝 찾기
-            const jsonStart = jsonText.indexOf('{');
-            const jsonEnd = jsonText.lastIndexOf('}');
-
-            if (jsonStart !== -1 && jsonEnd !== -1) {
-                jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
-            }
-
-            // JSON 파싱
-            const soraData = JSON.parse(jsonText);
-
-            // localStorage 저장
-            localStorage.setItem('SORA_PROMPTS_JSON', JSON.stringify(soraData));
-            window.SORA_PROMPTS_JSON_FOR_PYTHON = JSON.stringify(soraData);
-
-            updateStatus(`💾 localStorage 저장 완료 (${soraData.sora_prompts.length}개 프롬프트)`, '#4CAF50');
-
-            console.log('✅ Sora JSON 저장 완료:', soraData);
-
-        } catch (error) {
-            updateStatus(`❌ JSON 파싱 실패: ${error.message}`, '#f44336');
-            console.error('JSON 파싱 에러:', error);
-            console.log('원본 응답:', allResponses[allResponses.length - 1].response);
-        }
     }
 
     // 이벤트 리스너 설정
