@@ -110,7 +110,8 @@
         },
         taskMap: [],                    // task_id ↔ prompt 매핑 (동시실행 지원)
         pendingTaskId: null,            // 방금 입력한 프롬프트의 task_id (fetch에서 캡처)
-        currentChannel: null            // 현재 작업 중인 채널 식별자
+        currentChannel: null,           // 현재 작업 중인 채널 식별자
+        idMap: null                     // 🔥 고유 ID ↔ prompt 매핑 (Organize 검색용)
     };
 
     // ============================================================================
@@ -715,32 +716,70 @@
         return false;
     }
 
-    // 모든 영상 다운로드 (taskMap 기반)
+    // 🔥 모든 영상 다운로드 (ID 기반 - Midjourney 방식)
     async function downloadAllVideos() {
         addStatus('영상 다운로드 시작...', 'progress');
 
-        // taskMap에서 완료된 task들 (현재 채널)
-        const completedTasks = state.taskMap.filter(t => 
-            t.status === 'complete' && 
-            t.channel === state.currentChannel
-        );
-        
-        if (completedTasks.length === 0) {
-            addStatus('완료된 task가 없음, DOM 기반 다운로드로 전환', 'warning');
-            
-            // fallback: 기존 방식
-            const videoItems = document.querySelectorAll('div[class*="relative"]:has(video), div:has(img[src*="openai"])');
-            addStatus(`${videoItems.length}개 영상 발견 (DOM)`, 'info');
-            
-            let downloadCount = 0;
+        // 🔥 ID 매핑 확인
+        if (!state.idMap || Object.keys(state.idMap).length === 0) {
+            addStatus('⚠️ ID 매핑 없음 - 순차 다운로드 시도', 'warning');
+            await downloadSequentially();
+            return;
+        }
 
-            for (let i = 0; i < videoItems.length && i < state.totalPrompts; i++) {
-                const item = videoItems[i];
-                addStatus(`[${i + 1}/${videoItems.length}] 다운로드 중...`, 'progress');
+        addStatus(`📋 ID 기반 다운로드: ${Object.keys(state.idMap).length}개`, 'info');
 
-                item.click();
+        let downloadCount = 0;
+        const results = [];
+
+        // 각 ID로 Drafts에서 검색
+        for (const [uniqueId, info] of Object.entries(state.idMap)) {
+            const index = info.index;
+            const originalPrompt = info.original;
+            
+            addStatus(`🔍 [${index + 1}] ID:${uniqueId} 검색 중...`, 'info');
+
+            try {
+                // 🔥 DOM에서 프롬프트 텍스트로 영상 찾기
+                const allDrafts = document.querySelectorAll('div, a, span');
+                let foundElement = null;
+
+                for (const el of allDrafts) {
+                    const text = el.textContent || el.innerText || '';
+                    
+                    // ID 매칭 (여러 형식 지원)
+                    if (text.includes(`ID${uniqueId}`) || 
+                        text.includes(`ID:${uniqueId}`) ||
+                        text.includes(`[ID:${uniqueId}]`)) {
+                        
+                        // 영상 링크 찾기
+                        const link = el.closest('a[href^="/jobs/"]') || 
+                                    el.querySelector('a[href^="/jobs/"]') ||
+                                    el.parentElement?.querySelector('a[href^="/jobs/"]');
+                        
+                        if (link) {
+                            foundElement = link;
+                            addStatus(`✅ [${index + 1}] 매칭 발견!`, 'success');
+                            break;
+                        }
+                    }
+                }
+
+                if (!foundElement) {
+                    addStatus(`⚠️ [${index + 1}] ID:${uniqueId} 미발견`, 'warning');
+                    state.errors.push({ 
+                        index: index, 
+                        uniqueId: uniqueId,
+                        error: '영상 미발견' 
+                    });
+                    continue;
+                }
+
+                // 영상 상세 보기
+                foundElement.click();
                 await sleep(1500);
 
+                // ... 버튼 클릭
                 const moreBtn = document.querySelector('button[id^="radix-"]:has(svg path[d*="M3 12a2"])') ||
                                findByText('...', 'button') ||
                                document.querySelector('button:has(svg path[d*="12a2"])');
@@ -756,37 +795,45 @@
                         downloadItem.click();
                         await sleep(CONFIG.DOWNLOAD_DELAY);
 
+                        const safePrompt = originalPrompt.substring(0, 30).replace(/[\/\\:*?"<>|]/g, '_');
+                        const fileName = `sora_${index + 1}_${safePrompt}_${uniqueId}.mp4`;
+
                         state.downloadedFiles.push({
-                            index: i,
+                            index: index,
+                            uniqueId: uniqueId,
+                            prompt: originalPrompt,
+                            fileName,
                             timestamp: Date.now()
                         });
                         downloadCount++;
-                        addStatus(`영상 ${i + 1} 다운로드 시작`, 'success');
+                        addStatus(`✅ [${index + 1}] ${fileName}`, 'success');
                     }
                 } else {
+                    // 직접 다운로드
                     const videoEl = document.querySelector('video[src*="openai"]');
                     if (videoEl?.src) {
-                        const fileName = `sora_video_${i + 1}_${Date.now()}.mp4`;
-                        try {
-                            const a = document.createElement('a');
-                            a.href = videoEl.src;
-                            a.download = fileName;
-                            a.click();
+                        const safePrompt = originalPrompt.substring(0, 30).replace(/[\/\\:*?"<>|]/g, '_');
+                        const fileName = `sora_${index + 1}_${safePrompt}_${uniqueId}.mp4`;
 
-                            state.downloadedFiles.push({
-                                index: i,
-                                fileName,
-                                url: videoEl.src,
-                                timestamp: Date.now()
-                            });
-                            downloadCount++;
-                            addStatus(`영상 ${i + 1} 다운로드 (direct)`, 'success');
-                        } catch (e) {
-                            addStatus(`다운로드 오류: ${e.message}`, 'error');
-                        }
+                        const a = document.createElement('a');
+                        a.href = videoEl.src;
+                        a.download = fileName;
+                        a.click();
+
+                        state.downloadedFiles.push({
+                            index: index,
+                            uniqueId: uniqueId,
+                            prompt: originalPrompt,
+                            fileName,
+                            url: videoEl.src,
+                            timestamp: Date.now()
+                        });
+                        downloadCount++;
+                        addStatus(`✅ [${index + 1}] ${fileName} (direct)`, 'success');
                     }
                 }
 
+                // 뒤로 가기
                 const backBtn = document.querySelector('button:has(svg path[d*="M15"]), a[href="/me"]');
                 if (backBtn) {
                     backBtn.click();
@@ -795,106 +842,54 @@
                     window.history.back();
                     await sleep(1000);
                 }
+
+            } catch (error) {
+                addStatus(`❌ [${index + 1}] 오류: ${error.message}`, 'error');
+                state.errors.push({ 
+                    index: index, 
+                    uniqueId: uniqueId,
+                    error: error.message 
+                });
             }
-            
-            addStatus(`다운로드 완료: ${downloadCount}/${videoItems.length}개`, 'success');
-            completeAutomation();
-            return;
         }
 
-        // taskMap 기반 다운로드
-        addStatus(`다운로드 대상: ${completedTasks.length}개 (taskMap)`, 'info');
+        addStatus(`━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+        addStatus(`✅ 다운로드 완료: ${downloadCount}/${Object.keys(state.idMap).length}개`, 'success');
 
+        // 완료 처리
+        completeAutomation();
+    }
+
+    // 🔥 순차 다운로드 (fallback - ID 없을 때)
+    async function downloadSequentially() {
+        const videoItems = document.querySelectorAll('div[class*="relative"]:has(video), div:has(img[src*="openai"])');
+        addStatus(`${videoItems.length}개 영상 발견 (순차 모드)`, 'info');
+        
         let downloadCount = 0;
 
-        for (let i = 0; i < completedTasks.length; i++) {
-            const task = completedTasks[i];
-            const taskIdShort = task.taskId.substring(0, 8);
-            
-            addStatus(`[${i + 1}/${completedTasks.length}] ${taskIdShort}... 다운로드`, 'progress');
+        for (let i = 0; i < videoItems.length && i < state.totalPrompts; i++) {
+            const item = videoItems[i];
+            addStatus(`[${i + 1}/${videoItems.length}] 다운로드 중...`, 'progress');
 
-            // task_id로 영상 링크 찾기
-            const allLinks = document.querySelectorAll('a[href^="/jobs/"]');
-            let taskLink = null;
-            
-            for (const link of allLinks) {
-                const href = link.getAttribute('href');
-                if (href && href.includes(task.taskId)) {
-                    taskLink = link;
-                    break;
-                }
-            }
-            
-            if (!taskLink) {
-                addStatus(`Task ${taskIdShort} 링크 미발견`, 'warning');
-                state.errors.push({ taskId: task.taskId, error: '링크 없음' });
-                continue;
-            }
-
-            // 영상 클릭하여 상세 보기
-            taskLink.click();
+            item.click();
             await sleep(1500);
 
-            // ... 버튼 찾기 및 클릭
             const moreBtn = document.querySelector('button[id^="radix-"]:has(svg path[d*="M3 12a2"])') ||
-                           findByText('...', 'button') ||
-                           document.querySelector('button:has(svg path[d*="12a2"])');
+                           findByText('...', 'button');
 
             if (moreBtn) {
                 moreBtn.click();
                 await sleep(500);
 
-                const downloadItem = findByText('Download', 'div[role="menuitem"]') ||
-                                    findByText('Download', 'div');
-
+                const downloadItem = findByText('Download', 'div[role="menuitem"]');
                 if (downloadItem) {
                     downloadItem.click();
                     await sleep(CONFIG.DOWNLOAD_DELAY);
-
-                    const safePrompt = task.prompt.substring(0, 30).replace(/[\/\\:*?"<>|]/g, '_');
-                    const fileName = `sora_${i + 1}_${safePrompt}_${taskIdShort}.mp4`;
-
-                    state.downloadedFiles.push({
-                        taskId: task.taskId,
-                        prompt: task.prompt,
-                        fileName,
-                        timestamp: Date.now()
-                    });
                     downloadCount++;
-                    addStatus(`✅ ${fileName}`, 'success');
-                } else {
-                    addStatus('Download 메뉴 없음', 'warning');
-                }
-            } else {
-                // 직접 다운로드 시도
-                const videoEl = document.querySelector('video[src*="openai"]');
-                if (videoEl?.src) {
-                    const safePrompt = task.prompt.substring(0, 30).replace(/[\/\\:*?"<>|]/g, '_');
-                    const fileName = `sora_${i + 1}_${safePrompt}_${taskIdShort}.mp4`;
-
-                    try {
-                        const a = document.createElement('a');
-                        a.href = videoEl.src;
-                        a.download = fileName;
-                        a.click();
-
-                        state.downloadedFiles.push({
-                            taskId: task.taskId,
-                            prompt: task.prompt,
-                            fileName,
-                            url: videoEl.src,
-                            timestamp: Date.now()
-                        });
-                        downloadCount++;
-                        addStatus(`✅ ${fileName} (direct)`, 'success');
-                    } catch (e) {
-                        addStatus(`다운로드 오류: ${e.message}`, 'error');
-                        state.errors.push({ taskId: task.taskId, error: e.message });
-                    }
+                    addStatus(`영상 ${i + 1} 다운로드`, 'success');
                 }
             }
 
-            // 뒤로 가기
             const backBtn = document.querySelector('button:has(svg path[d*="M15"]), a[href="/me"]');
             if (backBtn) {
                 backBtn.click();
@@ -904,10 +899,8 @@
                 await sleep(1000);
             }
         }
-
-        addStatus(`다운로드 완료: ${downloadCount}/${completedTasks.length}개`, 'success');
-
-        // 완료 처리
+        
+        addStatus(`다운로드 완료: ${downloadCount}/${videoItems.length}개`, 'success');
         completeAutomation();
     }
 
@@ -931,6 +924,7 @@
 
         // localStorage에서 데이터 로드
         const promptsJson = localStorage.getItem('SORA_PROMPTS');
+        const idMapJson = localStorage.getItem('SORA_ID_MAP');
         const settingsJson = localStorage.getItem('SORA_SETTINGS');
 
         if (!promptsJson) {
@@ -940,6 +934,44 @@
 
         try {
             state.videoPrompts = JSON.parse(promptsJson);
+            
+            // 🔥 ID 매핑 확인 (Python에서 전달)
+            let idMap = null;
+            if (idMapJson) {
+                idMap = JSON.parse(idMapJson);
+                addStatus(`✅ ID 매핑 로드됨 (${Object.keys(idMap).length}개)`, 'success');
+            } else {
+                addStatus('⚠️ ID 매핑 없음 - 기본 모드 실행', 'warning');
+            }
+            
+            // 🔥 프롬프트에 ID가 없으면 자동 추가 (Python 미사용 시)
+            if (!idMap) {
+                idMap = {};
+                state.videoPrompts = state.videoPrompts.map((prompt, index) => {
+                    // 이미 ID가 있는지 확인
+                    const hasId = /\[ID:[a-z0-9]{8}\]/.test(prompt);
+                    if (hasId) return prompt;
+                    
+                    // 고유 ID 생성 (8자리)
+                    const uniqueId = Date.now().toString(36).substr(-5) + Math.random().toString(36).substr(2, 3);
+                    idMap[uniqueId] = {
+                        index: index,
+                        original: prompt
+                    };
+                    
+                    // 프롬프트 끝에 ID 추가 (자연스럽게)
+                    return `${prompt}. Reference code ID${uniqueId}`;
+                });
+                
+                // 업데이트된 프롬프트 저장
+                localStorage.setItem('SORA_PROMPTS', JSON.stringify(state.videoPrompts));
+                localStorage.setItem('SORA_ID_MAP', JSON.stringify(idMap));
+                addStatus(`✅ 고유 ID 자동 생성됨 (${Object.keys(idMap).length}개)`, 'success');
+            }
+            
+            // idMap을 전역 상태에 저장
+            state.idMap = idMap;
+            
             if (settingsJson) {
                 state.settings = { ...state.settings, ...JSON.parse(settingsJson) };
             }
