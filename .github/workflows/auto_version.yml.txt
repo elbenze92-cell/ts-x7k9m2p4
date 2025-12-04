@@ -1,0 +1,83 @@
+name: Auto Bump Tampermonkey Versions
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '*.user.js'
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Auto bump version
+        run: |
+          echo "🔢 버전 자동 증가 시작..."
+          
+          for file in *.user.js; do
+            if [ -f "$file" ]; then
+              echo "📝 처리 중: $file"
+              
+              current_version=$(grep -oP '@version\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$file" | head -1)
+              
+              if [ -z "$current_version" ]; then
+                echo "⚠️ 버전 정보 없음, 건너뜀"
+                continue
+              fi
+              
+              IFS='.' read -r major minor patch <<< "$current_version"
+              
+              patch=$((patch + 1))
+              
+              if [ $patch -ge 10 ]; then
+                patch=0
+                minor=$((minor + 1))
+              fi
+              
+              if [ $minor -ge 10 ]; then
+                minor=0
+                major=$((major + 1))
+              fi
+              
+              new_version="$major.$minor.$patch"
+              
+              echo "   📌 $current_version → $new_version"
+              
+              sed -i "s/@version\s*$current_version/@version      $new_version/" "$file"
+            fi
+          done
+          
+          echo "✅ 버전 증가 완료!"
+      
+      - name: Commit changes
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          git add *.user.js
+          
+          if git diff --staged --quiet; then
+            echo "ℹ️ 변경사항 없음"
+          else
+            git commit -m "chore: auto bump versions [skip ci]"
+            git push
+            echo "✅ 변경사항 푸시 완료!"
+          fi
+      
+      - name: Summary
+        run: |
+          echo "### 🎉 자동 버전 업데이트 완료!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**업데이트된 파일:**" >> $GITHUB_STEP_SUMMARY
+          for file in *.user.js; do
+            if [ -f "$file" ]; then
+              version=$(grep -oP '@version\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$file" | head -1)
+              echo "- \`$(basename $file)\`: v$version" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
