@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         *create_viral 동영상 프롬프트
+// @name         *create_video_viral.user 동영상 프롬프트
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
 // @description  Remix 스타일의 고품질 Sora 프롬프트 자동 생성 (JSON 저장)
