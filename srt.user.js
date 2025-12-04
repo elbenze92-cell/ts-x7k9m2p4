@@ -461,6 +461,28 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    // 🔥 에러 응답 감지
+    function isErrorResponse(response) {
+        if (!response || response.trim().length < 50) {
+            return true;
+        }
+        
+        const errorPatterns = [
+            'An error occurred',
+            'Something went wrong',
+            'Unable to process',
+            'Overloaded',
+            'Try again',
+            '오류가 발생했습니다',
+            '다시 시도해주세요',
+            'Error'
+        ];
+        
+        return errorPatterns.some(pattern => 
+            response.toLowerCase().includes(pattern.toLowerCase())
+        );
+    }
+
     // 🔥 작업 완료 표시
     function markAsCompleted() {
         localStorage.setItem('SRT_STATUS', 'COMPLETED');
@@ -471,7 +493,7 @@
         document.getElementById('srt-complete-btn').disabled = true;
     }
 
-    // SRT 생성 시작
+    // SRT 생성 시작 (재시도 로직 추가)
     async function startSRTGeneration() {
         const whisperJson = document.getElementById('whisper-json-input').value.trim();
         const subtitleText = document.getElementById('subtitle-text-input').value.trim();
@@ -487,16 +509,10 @@
             return;
         }
 
-        // 🔥 [버튼 클릭 문제 해결법 #2]
-        // 문제: delete window.PROPERTY 사용 시 Proxy로 보호된 window 객체에서
-        //       "deleteProperty on proxy: trap returned falsish" 에러 발생
-        // 해결: delete 대신 undefined 할당 사용
-        // 증상: 버튼 클릭은 되지만 startTranslation/startSRTGeneration 함수 내부에서
-        //       에러 발생하여 작업이 중단됨 (콘솔에 Proxy 관련 에러 표시)
         // 상태 초기화
         localStorage.removeItem('SRT_STATUS');
         localStorage.removeItem('SRT_RESULT_JSON');
-        window.SRT_RESULT_FOR_PYTHON = undefined;  // delete 대신 undefined 할당
+        window.SRT_RESULT_FOR_PYTHON = undefined;
 
         isRunning = true;
         document.getElementById('srt-start-btn').disabled = true;
@@ -510,17 +526,51 @@
         // 프롬프트 생성
         const prompt = generateSRTPrompt(whisperJson, subtitleText);
 
-        try {
-            await sendPromptToClaude(prompt);
-            addStatus('✅ 프롬프트 전송 완료');
+        // 🔥 재시도 루프
+        let retryCount = 0;
+        const maxRetries = 3;
+        let success = false;
 
-            await waitForResponseComplete();
+        while (retryCount < maxRetries && !success) {
+            try {
+                if (retryCount > 0) {
+                    addStatus(`🔄 재시도 ${retryCount}/${maxRetries}`);
+                    await sleep(3000 * retryCount);
+                }
 
-            extractSRTResult();
+                await sendPromptToClaude(prompt);
+                addStatus('✅ 프롬프트 전송 완료');
 
-        } catch (error) {
-            addStatus(`❌ 오류: ${error.message}`);
-            resetUI();
+                await waitForResponseComplete();
+
+                // 🔥 응답 수집 및 에러 체크
+                const responses = document.querySelectorAll('div[class*="font-claude-response"][class*="leading-"]');
+                if (responses.length === 0) {
+                    throw new Error('응답을 찾을 수 없습니다');
+                }
+
+                const lastResponse = responses[responses.length - 1];
+                const responseText = lastResponse.innerText.trim();
+
+                if (isErrorResponse(responseText)) {
+                    throw new Error('Claude 응답 에러 감지');
+                }
+
+                extractSRTResult();
+                success = true;
+
+            } catch (error) {
+                retryCount++;
+                addStatus(`⚠️ 오류: ${error.message}`);
+
+                if (retryCount >= maxRetries) {
+                    addStatus('❌ 최대 재시도 초과');
+                    localStorage.setItem('SRT_STATUS', 'FAILED');
+                    localStorage.setItem('SRT_ERROR', error.message);
+                    resetUI();
+                    return;
+                }
+            }
         }
     }
 

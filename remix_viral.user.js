@@ -1138,6 +1138,28 @@ CTA 구성 요소는
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    // 🔥 에러 응답 감지
+    function isErrorResponse(response) {
+        if (!response || response.trim().length < 50) {
+            return true;
+        }
+        
+        const errorPatterns = [
+            'An error occurred',
+            'Something went wrong',
+            'Unable to process',
+            'Overloaded',
+            'Try again',
+            '오류가 발생했습니다',
+            '다시 시도해주세요',
+            'Error'
+        ];
+        
+        return errorPatterns.some(pattern => 
+            response.toLowerCase().includes(pattern.toLowerCase())
+        );
+    }
+
     function addStatus(message) {
         const status = document.getElementById('automation-status');
         if (!status) return;
@@ -1554,39 +1576,63 @@ CTA 구성 요소는
                 addStatus('📌 사용자 데이터 삽입됨');
             }
 
-            try {
-                const success = await inputPrompt(promptText);
+            let retryCount = 0;
+            const maxRetries = 3;
+            let stepSuccess = false;
 
-                if (!success) {
-                    addStatus(`❌ ${step.name} 입력 실패, 다음 시도...`);
-                    await sleep(3000);
-                    continue;
-                }
+            while (retryCount < maxRetries && !stepSuccess) {
+                try {
+                    if (retryCount > 0) {
+                        addStatus(`🔄 재시도 ${retryCount}/${maxRetries}`);
+                        await sleep(3000 * retryCount);
+                    }
 
-                await waitForResponse();
+                    const success = await inputPrompt(promptText);
 
-                let continueCount = 0;
-                while (continueCount < 2) {
-                    const hasContinue = await handleContinue();
-                    if (hasContinue) {
-                        continueCount++;
-                        await waitForResponseComplete();
-                    } else {
-                        break;
+                    if (!success) {
+                        throw new Error('프롬프트 입력 실패');
+                    }
+
+                    await sleep(2000);
+
+                    let continueCount = 0;
+                    while (continueCount < 2) {
+                        const hasContinue = await handleContinue();
+                        if (hasContinue) {
+                            continueCount++;
+                            await waitForResponseComplete();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // 🔥 응답 수집 및 에러 체크
+                    const response = collectResponse();
+                    
+                    if (isErrorResponse(response)) {
+                        throw new Error('Claude 응답 에러 감지');
+                    }
+
+                    allResponses.push({
+                        step: `${currentStep + 1}. ${step.name}`,
+                        response: response
+                    });
+
+                    stepSuccess = true;
+
+                } catch (error) {
+                    retryCount++;
+                    addStatus(`⚠️ 오류: ${error.message}`);
+
+                    if (retryCount >= maxRetries) {
+                        addStatus(`❌ ${step.name} 실패 (최대 재시도 초과)`);
+                        localStorage.setItem('AUTOMATION_STATUS', 'FAILED');
+                        localStorage.setItem('AUTOMATION_ERROR', `${step.name}: ${error.message}`);
+                        stopAutomation();
+                        return;
                     }
                 }
-
-            } catch (error) {
-                addStatus(`⚠️ ${step.name} 처리 중 오류: ${error.message}`);
-                await sleep(5000);
-                continue;
             }
-
-            const response = collectResponse();
-            allResponses.push({
-                step: `${currentStep + 1}. ${step.name}`,
-                response: response
-            });
 
             currentStep++;
             addStatus(`✅ ${step.name} 완료`);

@@ -586,6 +586,28 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    // 🔥 에러 응답 감지
+    function isErrorResponse(response) {
+        if (!response || response.trim().length < 50) {
+            return true;
+        }
+        
+        const errorPatterns = [
+            'An error occurred',
+            'Something went wrong',
+            'Unable to process',
+            'Overloaded',
+            'Try again',
+            '오류가 발생했습니다',
+            '다시 시도해주세요',
+            'Error'
+        ];
+        
+        return errorPatterns.some(pattern => 
+            response.toLowerCase().includes(pattern.toLowerCase())
+        );
+    }
+
     function addStatus(message, type = 'normal') {
         const status = document.getElementById('automation-status');
         if (!status) return;
@@ -939,12 +961,22 @@
 
             addStatus(`📝 ${currentStep}단계: ${step.name}`);
 
-            try {
-                let promptToSend = step.prompt;
+            let retryCount = 0;
+            const maxRetries = 3;
+            let stepSuccess = false;
 
-                // 3단계이고 사용자 프롬프트가 있으면 주제 지정
-                if (currentStep === 3 && userPrompt) {
-                    promptToSend = `3단계: 사용자 지정 주제로 진행
+            while (retryCount < maxRetries && !stepSuccess) {
+                try {
+                    if (retryCount > 0) {
+                        addStatus(`🔄 재시도 ${retryCount}/${maxRetries}`, 'error');
+                        await sleep(3000 * retryCount);
+                    }
+
+                    let promptToSend = step.prompt;
+
+                    // 3단계이고 사용자 프롬프트가 있으면 주제 지정
+                    if (currentStep === 3 && userPrompt) {
+                        promptToSend = `3단계: 사용자 지정 주제로 진행
 
 📌 사용자가 선택한 주제: "${userPrompt}"
 
@@ -959,44 +991,55 @@
 【타겟 감정】: (분노/공감/희망/충격 중 선택)
 【예상 후킹 방향】: (첫 문장 방향성)
 ---`;
-                }
+                    }
 
-                const success = await inputPrompt(promptToSend);
+                    const success = await inputPrompt(promptToSend);
 
-                if (!success) {
-                    addStatus(`❌ ${step.name} 실패`, 'error');
-                    await sleep(3000);
-                    currentStep--;
-                    continue;
-                }
+                    if (!success) {
+                        throw new Error('프롬프트 입력 실패');
+                    }
 
-                await sleep(2000);
+                    await sleep(2000);
 
-                // Continue 버튼 처리
-                let continueCount = 0;
-                while (continueCount < 2) {
-                    const hasContinue = await handleContinue();
-                    if (hasContinue) {
-                        continueCount++;
-                        await waitForResponseComplete();
-                    } else {
-                        break;
+                    // Continue 버튼 처리
+                    let continueCount = 0;
+                    while (continueCount < 2) {
+                        const hasContinue = await handleContinue();
+                        if (hasContinue) {
+                            continueCount++;
+                            await waitForResponseComplete();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // 🔥 응답 수집 및 에러 체크
+                    const response = collectResponse();
+
+                    if (isErrorResponse(response)) {
+                        throw new Error('Claude 응답 에러 감지');
+                    }
+
+                    allResponses.push({
+                        step: `${currentStep}. ${step.name}`,
+                        response: response
+                    });
+
+                    stepSuccess = true;
+                    addStatus(`✅ ${step.name} 완료`, 'success');
+
+                } catch (error) {
+                    retryCount++;
+                    addStatus(`⚠️ 오류: ${error.message}`, 'error');
+
+                    if (retryCount >= maxRetries) {
+                        addStatus(`❌ ${step.name} 실패 (최대 재시도 초과)`, 'error');
+                        localStorage.setItem('AUTOMATION_STATUS', 'FAILED');
+                        localStorage.setItem('AUTOMATION_ERROR', `${step.name}: ${error.message}`);
+                        stopGeneration();
+                        return;
                     }
                 }
-
-                const response = collectResponse();
-                allResponses.push({
-                    step: `${currentStep}. ${step.name}`,
-                    response: response
-                });
-
-                addStatus(`✅ ${step.name} 완료`, 'success');
-
-            } catch (error) {
-                addStatus(`⚠️ 오류: ${error.message}`, 'error');
-                await sleep(5000);
-                currentStep--;
-                continue;
             }
 
             await sleep(3000);

@@ -388,6 +388,28 @@ IMPORTANT:
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    // 🔥 에러 응답 감지
+    function isErrorResponse(response) {
+        if (!response || response.trim().length < 50) {
+            return true;
+        }
+        
+        const errorPatterns = [
+            'An error occurred',
+            'Something went wrong',
+            'Unable to process',
+            'Overloaded',
+            'Try again',
+            '오류가 발생했습니다',
+            '다시 시도해주세요',
+            'Error'
+        ];
+        
+        return errorPatterns.some(pattern => 
+            response.toLowerCase().includes(pattern.toLowerCase())
+        );
+    }
+
     // 번역 시작
     async function startTranslation() {
         const koreanScript = document.getElementById('korean-script-input').value.trim();
@@ -467,17 +489,51 @@ IMPORTANT:
         // 프롬프트 생성
         const prompt = generateTranslationPrompt(koreanScript, languages);
 
-        try {
-            await sendPromptToClaude(prompt);
-            addStatus('✅ 프롬프트 전송 완료');
+        // 🔥 재시도 루프
+        let retryCount = 0;
+        const maxRetries = 3;
+        let success = false;
 
-            await waitForResponseComplete();
+        while (retryCount < maxRetries && !success) {
+            try {
+                if (retryCount > 0) {
+                    addStatus(`🔄 재시도 ${retryCount}/${maxRetries}`);
+                    await sleep(3000 * retryCount);
+                }
 
-            extractTranslationResult(languages);
+                await sendPromptToClaude(prompt);
+                addStatus('✅ 프롬프트 전송 완료');
 
-        } catch (error) {
-            addStatus(`❌ 오류: ${error.message}`);
-            resetUI();
+                await waitForResponseComplete();
+
+                // 🔥 응답 수집 및 에러 체크
+                const responses = document.querySelectorAll('div[class*="font-claude-response"][class*="leading-"]');
+                if (responses.length === 0) {
+                    throw new Error('응답을 찾을 수 없습니다');
+                }
+
+                const lastResponse = responses[responses.length - 1];
+                const responseText = lastResponse.innerText.trim();
+
+                if (isErrorResponse(responseText)) {
+                    throw new Error('Claude 응답 에러 감지');
+                }
+
+                extractTranslationResult(languages);
+                success = true;
+
+            } catch (error) {
+                retryCount++;
+                addStatus(`⚠️ 오류: ${error.message}`);
+
+                if (retryCount >= maxRetries) {
+                    addStatus('❌ 최대 재시도 초과');
+                    localStorage.setItem('TRANSLATION_STATUS', 'FAILED');
+                    localStorage.setItem('TRANSLATION_ERROR', error.message);
+                    resetUI();
+                    return;
+                }
+            }
         }
     }
 
