@@ -417,6 +417,28 @@ WHY_VIRAL:
     let selectedCount = 7;
     let allResponses = [];
 
+    // 🔥 에러 응답 감지
+    function isErrorResponse(response) {
+        if (!response || response.trim().length < 50) {
+            return true;
+        }
+        
+        const errorPatterns = [
+            'An error occurred',
+            'Something went wrong',
+            'Unable to process',
+            'Overloaded',
+            'Try again',
+            '오류가 발생했습니다',
+            '다시 시도해주세요',
+            'Error'
+        ];
+        
+        return errorPatterns.some(pattern => 
+            response.toLowerCase().includes(pattern.toLowerCase())
+        );
+    }
+
     // Claude 응답 중인지 체크
     function isClaudeResponding() {
         const stopButton = document.querySelector('button[aria-label="Stop response"]') ||
@@ -653,58 +675,89 @@ WHY_VIRAL:
             currentStep = i + 1;
             const step = STEP_PROMPTS[i];
 
-            updateProgress(currentStep);
-            updateStatus(`📍 ${currentStep}단계: ${step.name}`, '#2196F3');
+            let retryCount = 0;
+            const maxRetries = 3;
+            let success = false;
 
-            let promptText = step.prompt;
+            // 🔥 재시도 루프 (에러 감지 + 자동 복구)
+            while (retryCount < maxRetries && !success) {
+                try {
+                    if (retryCount > 0) {
+                        updateStatus(`🔄 재시도 ${retryCount}/${maxRetries}`, '#FF9800');
+                        await new Promise(resolve => 
+                            setTimeout(resolve, 3000 * retryCount)
+                        );
+                    }
 
-            // 사용자 입력 필요한 단계 처리
-            if (step.needsUserInput) {
-                promptText = promptText
-                    .replace(/{CATEGORY}/g, selectedCategory)
-                    .replace(/{COUNT}/g, selectedCount);
-            }
+                    updateProgress(currentStep);
+                    updateStatus(`📍 ${currentStep}단계: ${step.name}`, '#2196F3');
 
-            try {
-                const success = await inputPrompt(promptText);
+                    let promptText = step.prompt;
 
-                if (!success) {
-                    updateStatus(`❌ ${step.name} 입력 실패`, '#f44336');
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    i--; // 재시도
-                    continue;
-                }
+                    // 사용자 입력 필요한 단계 처리
+                    if (step.needsUserInput) {
+                        promptText = promptText
+                            .replace(/{CATEGORY}/g, selectedCategory)
+                            .replace(/{COUNT}/g, selectedCount);
+                    }
 
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                    // 프롬프트 입력
+                    const inputSuccess = await inputPrompt(promptText);
+                    if (!inputSuccess) {
+                        throw new Error('프롬프트 입력 실패');
+                    }
 
-                // Continue 버튼 처리
-                let continueCount = 0;
-                while (continueCount < 2) {
-                    const hasContinue = await handleContinue();
-                    if (hasContinue) {
-                        continueCount++;
-                        await waitForResponseComplete();
-                    } else {
-                        break;
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    // Continue 버튼 처리
+                    let continueCount = 0;
+                    while (continueCount < 2) {
+                        const hasContinue = await handleContinue();
+                        if (hasContinue) {
+                            continueCount++;
+                            await waitForResponseComplete();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // 응답 수집
+                    const response = collectResponse();
+
+                    // 🔥 에러 체크
+                    if (isErrorResponse(response)) {
+                        throw new Error('Claude 응답 에러 감지');
+                    }
+
+                    // 성공!
+                    allResponses.push({
+                        step: currentStep,
+                        name: step.name,
+                        response: response
+                    });
+
+                    success = true;
+                    updateStatus(`✅ ${step.name} 완료`, '#4CAF50');
+
+                } catch (error) {
+                    retryCount++;
+                    updateStatus(`⚠️ 오류: ${error.message}`, '#f44336');
+
+                    if (retryCount >= maxRetries) {
+                        updateStatus(`❌ ${step.name} 실패 (최대 재시도 초과)`, '#f44336');
+                        
+                        // 🔥 실패 신호
+                        localStorage.setItem('AUTOMATION_STATUS', 'FAILED');
+                        localStorage.setItem('AUTOMATION_ERROR', `${step.name}: ${error.message}`);
+                        window.AUTOMATION_COMPLETED = false;
+                        
+                        alert(`${step.name} 단계에서 계속 오류가 발생합니다.\n수동으로 확인해주세요.`);
+                        return;
                     }
                 }
-
-            } catch (error) {
-                updateStatus(`⚠️ ${step.name} 처리 중 오류: ${error.message}`, '#f44336');
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                i--; // 재시도
-                continue;
             }
 
-            const response = collectResponse();
-            allResponses.push({
-                step: currentStep,
-                name: step.name,
-                response: response
-            });
-
-            updateStatus(`✅ ${step.name} 완료`, '#4CAF50');
-
+            // 다음 단계 대기
             if (i < STEP_PROMPTS.length - 1) {
                 await new Promise(resolve => setTimeout(resolve, 3000));
             }
@@ -714,6 +767,10 @@ WHY_VIRAL:
         await parseAndSaveJSON();
 
         updateStatus('🎉 모든 단계 완료!', '#4CAF50');
+
+        // 🔥 완료 신호 (중복이지만 확실하게)
+        localStorage.setItem('AUTOMATION_STATUS', 'COMPLETED');
+        window.AUTOMATION_COMPLETED = true;
 
         completeBtn.disabled = false;
         completeBtn.style.opacity = '1';
@@ -752,6 +809,12 @@ WHY_VIRAL:
             updateStatus(`💾 localStorage 저장 완료 (${soraData.sora_prompts.length}개 프롬프트)`, '#4CAF50');
 
             console.log('✅ Sora JSON 저장 완료:', soraData);
+
+            // 🔥 파이썬 완료 신호 전송 (필수!)
+            localStorage.setItem('AUTOMATION_STATUS', 'COMPLETED');
+            localStorage.setItem('AUTOMATION_COMPLETED_AT', new Date().toISOString());
+            window.AUTOMATION_COMPLETED = true;
+            window.SORA_AUTOMATION_DONE = true;
 
         } catch (error) {
             updateStatus(`❌ JSON 파싱 실패: ${error.message}`, '#f44336');

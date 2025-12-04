@@ -591,7 +591,7 @@
 
         for (let i = 0; i < 60; i++) {
             if (isClaudeResponding()) {
-                addStatus(✍️ Claude 응답 중...');
+                addStatus('✍️ Claude 응답 중...');
                 break;
             }
             await sleep(500);
