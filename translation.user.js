@@ -444,10 +444,17 @@ IMPORTANT:
             name: languageNames[code] || code
         }));
 
+        // 🔥 [버튼 클릭 문제 해결법 #2]
+        // 문제: delete window.PROPERTY 사용 시 Proxy로 보호된 window 객체에서
+        //       "deleteProperty on proxy: trap returned falsish" 에러 발생
+        // 해결: delete 대신 undefined 할당 사용
+        // 증상: 버튼 클릭은 되지만 startTranslation 함수 내부에서
+        //       에러 발생하여 작업이 중단됨 (콘솔에 Proxy 관련 에러 표시)
+        
         // 상태 초기화
         localStorage.removeItem('TRANSLATION_STATUS');
         localStorage.removeItem('TRANSLATION_RESULT_JSON');
-        delete window.TRANSLATION_RESULT_FOR_PYTHON;
+        window.TRANSLATION_RESULT_FOR_PYTHON = undefined;  // delete 대신 undefined 할당
 
         isRunning = true;
         document.getElementById('trans-start-btn').disabled = true;
