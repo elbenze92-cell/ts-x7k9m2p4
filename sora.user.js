@@ -185,6 +185,64 @@
     };
 
     // ============================================================================
+    // 🔍 DOM 변경 감지 (fetch 실패 시 대안) - 강화 버전
+    // ============================================================================
+    
+    let detectedTaskIds = new Set(); // 🔥 Set으로 변경 (모든 감지된 Task ID 추적)
+    
+    function detectNewTaskFromDOM() {
+        // 🔥 여러 선택자 시도 (더 많은 경로 확인)
+        const selectors = [
+            'a[href^="/jobs/"]',
+            'div[data-task-id]',
+            '[class*="task"]',
+            '[class*="job"]'
+        ];
+        
+        for (const selector of selectors) {
+            const elements = document.querySelectorAll(selector);
+            
+            // 🔥 모든 요소 확인 (첫 번째만 아니라)
+            for (const el of elements) {
+                let taskId = null;
+                
+                // href에서 추출
+                if (el.hasAttribute('href')) {
+                    const href = el.getAttribute('href');
+                    const match = href.match(/\/jobs\/([a-f0-9-]+)/);
+                    if (match) taskId = match[1];
+                }
+                
+                // data 속성에서 추출
+                if (!taskId && el.hasAttribute('data-task-id')) {
+                    taskId = el.getAttribute('data-task-id');
+                }
+                
+                // 🔥 Task ID 정규화
+                if (taskId) {
+                    taskId = normalizeTaskId(taskId);
+                }
+                
+                // 🔥 새 Task ID 발견 시
+                if (taskId && !detectedTaskIds.has(taskId)) {
+                    detectedTaskIds.add(taskId);
+                    
+                    // 🔥 항상 pendingTaskId 업데이트 (덮어쓰기 OK)
+                    state.pendingTaskId = taskId;
+                    console.log(`[Sora DOM] 새 Task ID 감지: ${taskId} (총 ${detectedTaskIds.size}개)`);
+                    
+                    return taskId;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    // 🔥 0.3초마다 DOM 체크
+    setInterval(detectNewTaskFromDOM, 300);
+
+    // ============================================================================
     // 📝 로그 시스템
     // ============================================================================
     function addStatus(message, type = 'info') {
@@ -858,6 +916,19 @@
     // ============================================================================
 
     async function startAutomation() {
+        // 🔥 localStorage 초기화 (기존 결과 제거)
+        const keysToRemove = [
+            'SORA_COMPLETE',
+            'SORA_RESULTS',
+            'SORA_PENDING_DOWNLOAD',
+            'SORA_EXPECTED_COUNT',
+            'SORA_AUTO_CONTINUE',
+            'SORA_CURRENT_INDEX'
+        ];
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        addStatus('🧹 localStorage 초기화 완료', 'info');
+
         // localStorage에서 데이터 로드
         const promptsJson = localStorage.getItem('SORA_PROMPTS');
         const settingsJson = localStorage.getItem('SORA_SETTINGS');
@@ -1457,6 +1528,175 @@
             };
         };
     }
+
+    // ============================================================================
+    // 🐛 디버깅 함수 (전역 노출)
+    // ============================================================================
+    
+    window.SORA_DEBUG = {
+        // Fetch 캡처된 Task ID들
+        getTaskMap: function() {
+            console.log("=== Fetch 캡처된 Task ID들 ===");
+            if (state.taskMap.length === 0) {
+                console.log("(비어있음)");
+            } else {
+                state.taskMap.forEach((task, idx) => {
+                    console.log(`${idx + 1}. ID: ${task.taskId} | Status: ${task.status} | Channel: ${task.channel} | Prompt: ${task.prompt.substring(0, 50)}...`);
+                });
+            }
+            return state.taskMap;
+        },
+        
+        // DOM에 있는 Task ID들
+        getDomTasks: function() {
+            console.log("=== DOM에 있는 Task ID들 ===");
+            const links = document.querySelectorAll('a[href*="/jobs/"]');
+            const taskIds = [];
+            
+            links.forEach((link, idx) => {
+                const href = link.getAttribute('href');
+                const match = href.match(/\/jobs\/([a-f0-9-]+)/);
+                if (match) {
+                    const fullId = match[1];
+                    const shortId = normalizeTaskId(fullId);
+                    console.log(`${idx + 1}. ${shortId}... (전체: ${fullId})`);
+                    taskIds.push(fullId);
+                }
+            });
+            
+            if (taskIds.length === 0) {
+                console.log("(비어있음)");
+            }
+            
+            return taskIds;
+        },
+        
+        // 비교
+        compare: function() {
+            console.log("=== 비교 분석 ===");
+            const fetchIds = state.taskMap.map(t => t.taskId);
+            const domIds = this.getDomTasks();
+            
+            console.log(`\nFetch 캡처: ${fetchIds.length}개`);
+            console.log(`DOM 존재: ${domIds.length}개`);
+            
+            // 매칭 확인
+            console.log("\n매칭 확인:");
+            fetchIds.forEach((fetchId, idx) => {
+                const found = domIds.some(domId => {
+                    const shortDomId = normalizeTaskId(domId);
+                    return shortDomId === fetchId || domId.startsWith(fetchId);
+                });
+                const task = state.taskMap[idx];
+                console.log(`${idx + 1}. ${fetchId} (${task.status}) → ${found ? '✅ 매칭' : '❌ 없음'}`);
+            });
+            
+            // 추가 Task (DOM에만 있는 것)
+            console.log("\nDOM에만 있는 Task:");
+            domIds.forEach(domId => {
+                const shortDomId = normalizeTaskId(domId);
+                const found = fetchIds.some(fetchId => 
+                    fetchId === shortDomId || domId.startsWith(fetchId)
+                );
+                if (!found) {
+                    console.log(`- ${shortDomId}...`);
+                }
+            });
+        },
+        
+        // 현재 상태
+        getState: function() {
+            console.log("=== 현재 상태 ===");
+            console.log(`실행 중: ${state.isRunning}`);
+            console.log(`일시정지: ${state.isPaused}`);
+            console.log(`단계: ${state.phase}`);
+            console.log(`총 프롬프트: ${state.totalPrompts}`);
+            console.log(`현재 인덱스: ${state.currentPromptIndex}`);
+            console.log(`생성 완료: ${state.generatedCount}`);
+            console.log(`다운로드: ${state.downloadedFiles.length}개`);
+            console.log(`에러: ${state.errors.length}개`);
+            console.log(`taskMap: ${state.taskMap.length}개`);
+            console.log(`현재 채널: ${state.currentChannel || '(없음)'}`);
+            
+            return {
+                isRunning: state.isRunning,
+                isPaused: state.isPaused,
+                phase: state.phase,
+                totalPrompts: state.totalPrompts,
+                currentPromptIndex: state.currentPromptIndex,
+                generatedCount: state.generatedCount,
+                downloadedFiles: state.downloadedFiles.length,
+                errors: state.errors.length,
+                taskMap: state.taskMap.length,
+                currentChannel: state.currentChannel
+            };
+        },
+        
+        // localStorage 확인
+        checkLocalStorage: function() {
+            console.log("=== localStorage 확인 ===");
+            const keys = [
+                'SORA_PROMPTS',
+                'SORA_SETTINGS',
+                'SORA_AUTO_START',
+                'SORA_COMPLETE',
+                'SORA_RESULTS',
+                'SORA_TASK_MAP',
+                'SORA_CHANNEL',
+                'SORA_PENDING_DOWNLOAD',
+                'SORA_EXPECTED_COUNT',
+                'SORA_AUTO_CONTINUE',
+                'SORA_CURRENT_INDEX'
+            ];
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    try {
+                        const parsed = JSON.parse(value);
+                        if (typeof parsed === 'object') {
+                            if (Array.isArray(parsed)) {
+                                console.log(`${key}: [배열 ${parsed.length}개]`);
+                            } else {
+                                console.log(`${key}:`, parsed);
+                            }
+                        } else {
+                            console.log(`${key}: ${parsed}`);
+                        }
+                    } catch {
+                        console.log(`${key}: ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}`);
+                    }
+                } else {
+                    console.log(`${key}: (없음)`);
+                }
+            });
+        },
+        
+        // 강제 완료 처리 (테스트용)
+        forceComplete: function() {
+            console.log("⚠️ 강제 완료 처리 실행...");
+            state.isRunning = false;
+            completeAutomation();
+        },
+        
+        // taskMap 초기화
+        clearTaskMap: function() {
+            console.log("🧹 taskMap 초기화");
+            state.taskMap = [];
+            state.pendingTaskId = null;
+            detectedTaskIds.clear();
+            localStorage.removeItem('SORA_TASK_MAP');
+        }
+    };
+    
+    console.log("🐛 디버깅 함수 활성화됨! 사용법:");
+    console.log("  SORA_DEBUG.getTaskMap()        - Fetch 캡처된 Task ID 확인");
+    console.log("  SORA_DEBUG.getDomTasks()       - DOM의 Task ID 확인");
+    console.log("  SORA_DEBUG.compare()           - 둘을 비교");
+    console.log("  SORA_DEBUG.getState()          - 현재 상태");
+    console.log("  SORA_DEBUG.checkLocalStorage() - localStorage 확인");
+    console.log("  SORA_DEBUG.forceComplete()     - 강제 완료 (테스트용)");
+    console.log("  SORA_DEBUG.clearTaskMap()      - taskMap 초기화");
 
     // ============================================================================
     // 🚀 초기화
