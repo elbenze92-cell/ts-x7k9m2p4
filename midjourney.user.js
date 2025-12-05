@@ -1,4 +1,3 @@
-// Test auto version bump v1
 // ==UserScript==
 // @name         @이미지 Midjourney 완전 자동화 (Python 연동)
 // @namespace    https://atobro.com/
