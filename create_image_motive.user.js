@@ -331,7 +331,7 @@
 - 동기부여 콘텐츠에 어울리는 시네마틱/감성적 스타일
 - 사람 얼굴은 피하거나 뒷모습/실루엣으로
 
-📌 장면 구성 (10장 = 60초):
+📌 장면 구성 예시 (10장 = 60초):
 1-2장: 기 (후킹 장면)
 3-4장: 승 (문제/고민 시각화)
 5-7장: 전 (반전/해결 장면)
@@ -342,23 +342,28 @@
 ⚠️ 반드시 아래 형식 그대로 출력하세요.
 ⚠️ 마커 바깥에는 절대 아무것도 쓰지 마세요.
 ⚠️ "네", "알겠습니다" 같은 말도 금지.
-⚠️ 이미지 프롬프트는 반드시 10개! 각각 번호(1. 2. 3...)로 시작하고 줄바꿈으로 구분!
+⚠️ 이미지 프롬프트는 생성 실패를 대비하여 넉넉하게 최소 10개 이상 15개까지! 각각 번호(1. 2. 3...)로 시작하고 줄바꿈으로 구분!
 
 ---SCRIPT_START---
 (6단계에서 선택한 최종 대본만, 줄바꿈 포함)
 ---SCRIPT_END---
 
 ---PROMPTS_START---
-1. A silhouette of a person standing at crossroads during golden hour, dramatic lighting, cinematic composition, 9:16 vertical format
+1. A silhouette of a person standing at crossroads during golden hour, dramatic lighting, cinematic composition, 9:16
 2. Close-up of hands holding crumpled paper, dark moody atmosphere, shallow depth of field, 9:16 aspect ratio
-3. Person sitting alone on park bench at night, city lights blurred in background, melancholic mood, vertical composition
-4. Sunrise breaking through storm clouds, rays of light, hope and new beginning concept, dramatic sky, 9:16 format
-5. Back view of person climbing steep mountain path, determination concept, epic landscape, vertical cinematic shot
+3. Person sitting alone on park bench at night, city lights blurred in background, melancholic mood, vertical composition, 9:16
+4. Sunrise breaking through storm clouds, rays of light, hope and new beginning concept, dramatic sky, 9:16 
+5. Back view of person climbing steep mountain path, determination concept, epic landscape, vertical cinematic shot, 9:16
 6. Hands breaking through chains, freedom and breakthrough concept, dramatic lighting, dark background, 9:16
-7. Person standing on mountain peak with arms raised, victory pose, sunrise, inspirational mood, vertical format
+7. Person standing on mountain peak with arms raised, victory pose, sunrise, inspirational mood, 9:16
 8. Close-up of eyes with reflection of sunrise, hope and vision concept, emotional portrait style, 9:16
-9. Person running towards bright light at end of tunnel, metaphor for success, dramatic composition, vertical
+9. Person running towards bright light at end of tunnel, metaphor for success, dramatic composition, 9:16
 10. Silhouette celebrating on rooftop at sunset, city skyline background, achievement concept, 9:16 cinematic
+11.넉넉하게
+12.넉넉하게
+13.넉넉하게
+14.넉넉하게
+15.넉넉하게
 ---PROMPTS_END---
 
 ⚠️ 위 예시처럼 각 프롬프트를 번호로 시작하고, 대본 내용에 맞게 장면을 수정해서 작성하세요!`
