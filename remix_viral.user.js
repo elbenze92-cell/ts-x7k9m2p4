@@ -1,12 +1,12 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         *Remix Viral 대본 각색
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ
 // @author       You
 // @match        https://claude.ai/project/01991c1a-bda0-7027-be91-791334cdd410
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/remix_viral.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/remix_viral.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/remix_viral.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/remix_viral.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

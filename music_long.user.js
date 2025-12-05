@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         !music long 대본 자동화 (Python 연동)
 // @namespace    https://atobro.com/
 // @version      1.0.0
@@ -6,8 +6,8 @@
 // @author       Atobro
 // @match        https://chatgpt.com/*
 // @match        https://claude.ai/project/01991a16-3ace-725a-b5e7-91f0b1b7ed2c
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/music_long.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/music_long.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/music_long.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/music_long.user.js
 // @icon         https://chat.openai.com/favicon.ico
 // @grant        GM_addStyle
 // @grant        GM_notification

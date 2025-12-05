@@ -1,12 +1,12 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         *senior guide 대본 생성
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
 // @description  시니어 건강 정보 롱폼 대본 + 미드저니 프롬프트 자동 생성 (1시간 분량)
 // @author       Atobro
 // @match        https://claude.ai/project/019ad8ff-9135-73af-a695-9b82a73468cc
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/senior_guide.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/senior_guide.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/senior_guide.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/senior_guide.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

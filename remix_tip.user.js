@@ -1,12 +1,12 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         *Remix tip 대본 각색
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ
 // @author       You
 // @match        https://claude.ai/project/01996480-4e0b-7649-8e84-fc88d8199c78
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/remix_tip.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/remix_tip.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/remix_tip.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/remix_tip.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

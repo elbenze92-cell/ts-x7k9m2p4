@@ -1,12 +1,12 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         @이미지 Midjourney 완전 자동화 (Python 연동)
 // @namespace    https://atobro.com/
 // @version      1.0.2
 // @description  Midjourney 이미지 생성 완전 자동화 - 프롬프트 입력, 설정, 생성 대기, CDN 다운로드, Python 연동
 // @author       Atobro
 // @match        https://www.midjourney.com/*
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/midjourney.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/midjourney.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/midjourney.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/midjourney.user.js
 // @icon         https://www.midjourney.com/favicon.ico
 // @grant        GM_download
 // @grant        GM_notification

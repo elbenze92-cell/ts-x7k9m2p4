@@ -1,12 +1,12 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         @동영상 Sora 완전 자동화 (Python 연동) v2.0
 // @namespace    https://atobro.com/
 // @version      1.0.0
 // @description  Sora 영상 생성 완전 자동화 - Storyboard 모드, 연속 생성, Drafts 다운로드, Python 연동
 // @author       Atobro
 // @match        https://sora.chatgpt.com/*
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/sora.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/sora.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/sora.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/sora.user.js
 // @icon         https://sora.chatgpt.com/favicon.ico
 // @grant        GM_addStyle
 // @grant        GM_setValue
