@@ -62,17 +62,13 @@
         prompts: [],
         settings: {
             aspectRatio: '9:16',        // 기본: 세로 (숏폼)
-            version: 'niji 6',              // v7 또는 niji 6
+            version: 'niji 6',          // v7 또는 niji 6
             mode: 'Standard',
             speed: 'Relax'              // 무조건 Relax!
         },
         results: [],                    // 완료된 이미지 정보
         errors: [],                     // 에러 목록
-        startTime: null,
-        lastJobId: null,                // 마지막으로 감지한 job ID
-        jobMap: [],                     // job_id ↔ prompt 매핑 (동시실행 지원)
-        pendingJobId: null,             // 방금 입력한 프롬프트의 job_id (fetch에서 캡처)
-        currentChannel: null            // 현재 작업 중인 채널 식별자
+        startTime: null
     };
 
     // ============================================================================
@@ -92,113 +88,6 @@
         return `${minutes}분 ${remainingSeconds}초`;
     };
 
-    // ============================================================================
-    // 🔗 Fetch 가로채기 (submit-jobs API 응답에서 job_id 캡처)
-    // ============================================================================
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        const response = await originalFetch.apply(this, args);
-
-        try {
-            const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
-            
-            // 🔥 모든 API 호출 로깅 (디버깅용)
-            if (url.includes('/api/')) {
-                console.log(`[MJ Fetch] API 호출: ${url}`);
-            }
-
-            // submit-jobs API 응답 가로채기
-            if (url.includes('submit-jobs') || url.includes('/jobs/')) {
-                const clonedResponse = response.clone();
-                const data = await clonedResponse.json();
-
-                if (data.success && data.success.length > 0) {
-                    const jobInfo = data.success[0];
-                    let jobId = jobInfo.job_id;
-                    const prompt = jobInfo.prompt;
-
-                    // 🔥 Job ID 정규화 (첫 8-10자만 사용, UUID의 첫 부분)
-                    const match = jobId.match(/^([a-f0-9]{8})/);
-                    if (match) {
-                        jobId = match[1];
-                    }
-
-                    // 전역 상태에 저장
-                    state.pendingJobId = jobId;
-
-                    // jobMap에 추가 (채널 정보 포함)
-                    state.jobMap.push({
-                        jobId: jobId,
-                        prompt: prompt,
-                        channel: state.currentChannel || 'unknown',
-                        timestamp: Date.now(),
-                        status: 'pending'
-                    });
-
-                    console.log(`[MJ Fetch] job_id 캡처: ${jobId.substring(0, 8)}...`);
-                }
-            }
-        } catch (e) {
-            // JSON 파싱 실패 등은 무시 (일반 요청일 수 있음)
-        }
-
-        return response;
-    };
-
-    // ============================================================================
-    // 🔍 DOM 변경 감지 (fetch 실패 시 대안) - 강화 버전
-    // ============================================================================
-    
-    let detectedJobIds = new Set(); // 🔥 Set으로 변경 (모든 감지된 Job ID 추적)
-    
-    function detectNewJobFromDOM() {
-        // 🔥 여러 선택자 시도 (더 많은 경로 확인)
-        const selectors = [
-            'a[href^="/jobs/"]',
-            'div[data-job-id]',
-            '[class*="job"]'
-        ];
-        
-        for (const selector of selectors) {
-            const elements = document.querySelectorAll(selector);
-            
-            // 🔥 모든 요소 확인 (첫 번째만 아니라)
-            for (const el of elements) {
-                let jobId = null;
-                
-                // href에서 추출
-                if (el.hasAttribute('href')) {
-                    const href = el.getAttribute('href');
-                    const match = href.match(/\/jobs\/([a-f0-9-]+)/);
-                    if (match) jobId = match[1];
-                }
-                
-                // data 속성에서 추출
-                if (!jobId && el.hasAttribute('data-job-id')) {
-                    jobId = el.getAttribute('data-job-id');
-                }
-                
-                // 🔥 새 Job ID 발견 시
-                if (jobId && !detectedJobIds.has(jobId)) {
-                    // 🔥 Job ID 정규화 (첫 8자만)
-                    const shortJobId = jobId.substring(0, 8);
-                    detectedJobIds.add(shortJobId);
-                    
-                    // 🔥 항상 pendingJobId 업데이트 (덮어쓰기 OK)
-                    state.pendingJobId = shortJobId;
-                    console.log(`[MJ DOM] 새 Job ID 감지: ${shortJobId} (총 ${detectedJobIds.size}개)`);
-                    
-                    return jobId;
-                }
-            }
-        }
-        
-        return null;
-    }
-    
-    // 🔥 0.3초마다 DOM 체크 (더 자주)
-    setInterval(detectNewJobFromDOM, 300);
-    
     // ============================================================================
     // 📝 로그 시스템
     // ============================================================================
@@ -568,11 +457,12 @@
             addStatus('✓ 입력창 찾음', 'success');
             await sleep(1000);
 
-            // 포커스
+            // 🔥 1. 기존 내용 완전히 지우기
+            inputArea.value = '';
             inputArea.focus();
             await sleep(500);
 
-            // React 상태 강제 업데이트
+            // 🔥 2. React 상태 강제 업데이트 (여러 이벤트 발생)
             addStatus('React 상태 업데이트 중...', 'info');
             
             const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -582,18 +472,66 @@
             
             nativeInputValueSetter.call(inputArea, finalPrompt);
             
-            // React 이벤트 발생
-            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-            inputArea.dispatchEvent(new Event('change', { bubbles: true }));
+            // 🔥 모든 React 이벤트 발생
+            inputArea.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+            inputArea.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+            inputArea.dispatchEvent(new Event('blur', { bubbles: true }));
+            inputArea.focus();
+            inputArea.dispatchEvent(new Event('focus', { bubbles: true }));
             
-            await sleep(2000);
+            await sleep(3000);  // 🔥 3초로 증가
             addStatus('✅ 입력 완료!', 'success');
 
             await sleep(2000);
-            addStatus('━━━ [7단계] 전송 버튼 찾기 ━━━', 'info');
+            addStatus('━━━ [7단계] 전송 ━━━', 'info');
             await sleep(1000);
 
-            // 전송 버튼 찾기
+            // 🔥 우선순위 1: Enter 키 시도 (가장 안정적)
+            addStatus('Enter 키로 전송 시도...', 'info');
+            inputArea.focus();
+            await sleep(500);
+            
+            inputArea.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+            }));
+            
+            await sleep(3000);  // 🔥 3초 대기
+            
+            // 🔥 입력창이 비워졌는지 확인
+            if (inputArea.value === '') {
+                addStatus('✅✅✅ Enter로 전송 성공! ✅✅✅', 'success');
+                
+                // 🔥 "Starting..." 상태 확인 (5초 대기)
+                let foundStarting = false;
+                for (let i = 0; i < 5; i++) {
+                    await sleep(1000);
+                    const statusSpans = document.querySelectorAll('span.relative');
+                    for (const span of statusSpans) {
+                        if (span.textContent.includes('Starting') || span.textContent.includes('Queued')) {
+                            foundStarting = true;
+                            addStatus('✅ 생성 시작 확인됨!', 'success');
+                            break;
+                        }
+                    }
+                    if (foundStarting) break;
+                }
+                
+                if (!foundStarting) {
+                    addStatus(⚠️ "Starting" 상태 미확인 (5초 이내)', 'warning');
+                    addStatus('💡 Create 탭에서 수동 확인 필요', 'warning');
+                }
+                
+                return true;
+            }
+
+            // 🔥 우선순위 2: 전송 버튼 클릭
+            addStatus('⚠️ Enter 실패 - 버튼 클릭 시도', 'warning');
+            
             const inputParent = inputArea.closest('div');
             let submitBtn = null;
             
@@ -616,48 +554,53 @@
                 return false;
             }
 
-            // 전송 버튼 활성화 확인
-            await sleep(1000);
-            addStatus(`버튼 상태: disabled=${submitBtn.disabled}`, 'info');
-            
-            if (submitBtn.disabled) {
-                addStatus('⚠️ 비활성화됨, Enter 시도', 'warning');
-                
-                inputArea.focus();
-                await sleep(500);
-                
-                inputArea.dispatchEvent(new KeyboardEvent('keydown', {
-                    key: 'Enter',
-                    code: 'Enter',
-                    keyCode: 13,
-                    which: 13,
-                    bubbles: true,
-                    cancelable: true
-                }));
-                
-                await sleep(2000);
-                
-                if (inputArea.value === '') {
-                    addStatus('✅ Enter로 전송!', 'success');
-                    return true;
+            // 🔥 버튼 활성화 대기 (최대 5초)
+            let btnEnabled = false;
+            for (let i = 0; i < 5; i++) {
+                if (!submitBtn.disabled) {
+                    btnEnabled = true;
+                    break;
                 }
-                
-                addStatus('❌ Enter 실패', 'error');
+                await sleep(1000);
+                addStatus(`버튼 활성화 대기 중... (${i + 1}/5초)`, 'info');
+            }
+            
+            if (!btnEnabled) {
+                addStatus('❌ 버튼 활성화 타임아웃', 'error');
                 return false;
             }
 
-            await sleep(2000);
-            addStatus('━━━ [8단계] 전송 ━━━', 'info');
             await sleep(1000);
-
+            addStatus('버튼 클릭...', 'info');
             submitBtn.click();
             await sleep(3000);
 
             if (inputArea.value === '') {
-                addStatus('✅✅✅ 전송 성공! ✅✅✅', 'success');
+                addStatus('✅✅✅ 버튼으로 전송 성공! ✅✅✅', 'success');
+                
+                // 🔥 "Starting..." 상태 확인
+                let foundStarting = false;
+                for (let i = 0; i < 5; i++) {
+                    await sleep(1000);
+                    const statusSpans = document.querySelectorAll('span.relative');
+                    for (const span of statusSpans) {
+                        if (span.textContent.includes('Starting') || span.textContent.includes('Queued')) {
+                            foundStarting = true;
+                            addStatus('✅ 생성 시작 확인됨!', 'success');
+                            break;
+                        }
+                    }
+                    if (foundStarting) break;
+                }
+                
+                if (!foundStarting) {
+                    addStatus('⚠️ "Starting" 상태 미확인 (5초 이내)', 'warning');
+                    addStatus('💡 Create 탭에서 수동 확인 필요', 'warning');
+                }
+                
                 return true;
             } else {
-                addStatus('❌ 전송 실패', 'error');
+                addStatus('❌ 버튼 클릭도 실패', 'error');
                 return false;
             }
 
@@ -667,78 +610,6 @@
         }
     }
 
-    // ============================================================================
-    // ⏳ 이미지 생성 완료 대기
-    // ============================================================================
-
-    async function waitForGenerationComplete(promptIndex) {
-        const startTime = Date.now();
-        let lastLogTime = 0;
-
-        // fetch에서 캡처한 job_id 사용 (동시실행 지원)
-        const targetJobId = state.pendingJobId;
-        state.pendingJobId = null; // 사용 후 초기화
-
-        addStatus('이미지 생성 대기 중...', 'progress');
-
-        if (targetJobId) {
-            addStatus(`추적 중인 Job ID: ${targetJobId.substring(0, 8)}...`, 'info');
-        }
-
-        while (Date.now() - startTime < CONFIG.MAX_GENERATION_WAIT) {
-            // 1. 현재 상태 확인
-            const genStatus = getGenerationStatus();
-
-            // 2. 주기적 상태 로그
-            if (Date.now() - lastLogTime > CONFIG.STATUS_LOG_INTERVAL) {
-                const elapsed = formatDuration(Date.now() - startTime);
-                addStatus(`대기 중... (${elapsed}, 상태: ${genStatus.text || 'idle'})`, 'progress');
-                lastLogTime = Date.now();
-            }
-
-            // 3. fetch에서 캡처한 job_id가 있으면 해당 job 완료 확인
-            if (targetJobId) {
-                // DOM에서 해당 job_id 링크가 나타났는지 확인
-                const jobLink = document.querySelector(`a[href="/jobs/${targetJobId}"]`);
-
-                if (jobLink && !isGenerating()) {
-                    // jobMap 상태 업데이트
-                    const jobEntry = state.jobMap.find(j => j.jobId === targetJobId);
-                    if (jobEntry) {
-                        jobEntry.status = 'complete';
-                    }
-
-                    state.lastJobId = targetJobId;
-                    addStatus(`이미지 생성 완료! Job ID: ${targetJobId.substring(0, 8)}...`, 'success');
-                    return targetJobId;
-                }
-            } else {
-                // fallback: 기존 방식 (fetch 캡처 실패 시)
-                const currentJobId = getLatestJobId();
-                const previousJobId = state.lastJobId;
-
-                if (currentJobId && currentJobId !== previousJobId) {
-                    if (!isGenerating()) {
-                        state.lastJobId = currentJobId;
-                        addStatus(`새 이미지 생성 완료! Job ID: ${currentJobId.substring(0, 8)}...`, 'success');
-                        return currentJobId;
-                    }
-                }
-
-                if (!isGenerating() && genStatus.status === 'idle') {
-                    const latestJobId = getLatestJobId();
-                    if (latestJobId && latestJobId !== previousJobId) {
-                        state.lastJobId = latestJobId;
-                        return latestJobId;
-                    }
-                }
-            }
-
-            await sleep(CONFIG.POLL_INTERVAL);
-        }
-
-        throw new Error('이미지 생성 타임아웃 (10분 초과)');
-    }
 
     // ============================================================================
     // 💾 CDN 직접 다운로드
@@ -862,12 +733,11 @@
         localStorage.removeItem('MIDJOURNEY_RESULTS');
         localStorage.removeItem('MIDJOURNEY_ERRORS');
         localStorage.removeItem('MIDJOURNEY_COMPLETE');
-        localStorage.removeItem('MIDJOURNEY_SEED_RESULTS');
+        localStorage.removeItem('MIDJOURNEY_INPUT_COMPLETE');
         addStatus('🧹 localStorage 초기화 완료', 'info');
         
-        // Python에서 전달한 프롬프트와 매핑 가져오기
+        // Python에서 전달한 프롬프트 가져오기
         const promptsJson = localStorage.getItem('MIDJOURNEY_PROMPTS');
-        const promptMapJson = localStorage.getItem('MIDJOURNEY_PROMPT_MAP');
         const settingsJson = localStorage.getItem('MIDJOURNEY_SETTINGS');
 
         if (!promptsJson) {
@@ -875,17 +745,8 @@
             return;
         }
 
-        // Seed 매핑이 없으면 UI에서 직접 입력한 것으로 판단
-        if (!promptMapJson) {
-            addStatus('⚠️ Seed 매핑 없음 - 기존 방식으로 실행됩니다', 'warning');
-            // TODO: 기존 방식으로 fallback (현재는 에러)
-            addStatus('❌ 현재는 Python을 통한 실행만 지원합니다', 'error');
-            return;
-        }
-
         try {
             state.prompts = JSON.parse(promptsJson);
-            const promptMap = JSON.parse(promptMapJson);
 
             if (settingsJson) {
                 const settings = JSON.parse(settingsJson);
@@ -896,7 +757,6 @@
             addStatus(`❌ JSON 파싱 오류: ${e.message}`, 'error');
             console.error('파싱 오류 상세:', e);
             console.log('PROMPTS:', promptsJson?.substring(0, 100));
-            console.log('PROMPT_MAP:', promptMapJson?.substring(0, 100));
             return;
         }
 
@@ -909,16 +769,16 @@
         // UI 업데이트
         updateUI();
 
-        addStatus(`🚀 자동화 시작 (Seed 기반): ${state.totalPrompts}개 프롬프트`, 'success');
+        addStatus(`🚀 자동화 시작: ${state.totalPrompts}개 프롬프트`, 'success');
         addStatus(`설정: ${state.settings.aspectRatio}, ${state.settings.version}, ${state.settings.speed}`, 'info');
 
         // 설정 적용
         await applySettings();
         await sleep(1000);
 
-        // 1단계: 프롬프트 연속 입력
+        // 프롬프트 연속 입력
         addStatus(`━━━━━━━━━━━━━━━━━━━━━━`, 'info');
-        addStatus(`📝 1단계: ${state.totalPrompts}개 프롬프트 입력 시작`, 'progress');
+        addStatus(`📝 ${state.totalPrompts}개 프롬프트 입력 시작`, 'progress');
         
         let successCount = 0;
         
@@ -955,13 +815,13 @@
                 });
             }
             
-            await sleep(3000);  // 프롬프트 간 3초 대기
+            await sleep(5000);  // 🔥 5초로 증가 (프롬프트 간 여유)
         }
         
         addStatus(`✅ 입력 완료 (${successCount}/${state.totalPrompts}개)`, 'success');
         
         if (successCount === 0) {
-            addStatus(`⚠️ 생성 시작된 작업이 없습니다`, 'error');
+            addStatus(⚠️ 생성 시작된 작업이 없습니다`, 'error');
             completeAutomation();
             return;
         }
@@ -975,166 +835,6 @@
         completeAutomation();
     }
 
-    // ============================================================================
-    // 📋 Organize 탭에서 Seed로 Job 검색
-    // ============================================================================
-
-    async function collectJobsBySeed() {
-    const promptMapJson = localStorage.getItem('MIDJOURNEY_PROMPT_MAP');
-    
-    if (!promptMapJson) {
-        addStatus('❌ Seed 매핑 정보 없음', 'error');
-        return [];
-    }
-    
-    const promptMap = JSON.parse(promptMapJson);
-    const results = [];
-    
-    addStatus('📋 Organize 탭으로 이동 중...', 'info');
-    
-    // Organize 탭으로 이동
-    window.location.href = 'https://www.midjourney.com/organize/';
-    await sleep(5000);
-    
-    addStatus('✅ Organize 탭 도착', 'success');
-    
-    // 최신순 정렬 확인
-    try {
-        const sortButtons = document.querySelectorAll('button');
-        for (const btn of sortButtons) {
-            if (btn.textContent.includes('Sort') || btn.textContent.includes('정렬')) {
-                btn.click();
-                await sleep(1000);
-                
-                const sortOptions = document.querySelectorAll('li, div[role="option"]');
-                for (const opt of sortOptions) {
-                    if (opt.textContent.includes('Newest') || opt.textContent.includes('최신')) {
-                        opt.click();
-                        await sleep(2000);
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-        addStatus('✅ 최신순 정렬 완료', 'success');
-    } catch (e) {
-        addStatus('⚠️ 정렬 버튼 없음 (기본 정렬 사용)', 'warning');
-    }
-    
-    addStatus('🔍 Seed 검색 시작...', 'info');
-    
-    // 각 seed로 검색
-    for (const [seedStr, info] of Object.entries(promptMap)) {
-        const seed = info.seed;
-        const index = info.index;
-        const original = info.original;
-        
-        addStatus(`🔍 [${index + 1}] seed ${seed} 검색 중...`, 'info');
-        
-        try {
-            // 검색창 찾기
-            const searchInput = document.querySelector('input[placeholder*="Search"], input[placeholder*="검색"]');
-            
-            if (!searchInput) {
-                addStatus(`⚠️ [${index + 1}] 검색창 없음`, 'warning');
-                results.push({
-                    seed: seed,
-                    index: index,
-                    prompt: original,
-                    job_id: null,
-                    downloaded: false,
-                    error: '검색창 없음'
-                });
-                continue;
-            }
-            
-            // 검색어 입력 (--seed 형식)
-            searchInput.value = '';
-            searchInput.focus();
-            await sleep(500);
-            
-            const searchTerm = `--seed ${seed}`;
-            searchInput.value = searchTerm;
-            
-            // input 이벤트 발생
-            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await sleep(500);
-            
-            // Enter 키
-            searchInput.dispatchEvent(new KeyboardEvent('keydown', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                bubbles: true
-            }));
-            
-            await sleep(3000);  // 검색 결과 로딩 대기
-            
-            // Job 링크 찾기
-            const jobLinks = document.querySelectorAll('a[href*="/jobs/"]');
-            
-            if (jobLinks.length === 0) {
-                addStatus(`⚠️ [${index + 1}] Job 없음 (seed: ${seed})`, 'warning');
-                results.push({
-                    seed: seed,
-                    index: index,
-                    prompt: original,
-                    job_id: null,
-                    downloaded: false,
-                    error: 'Job 없음'
-                });
-            } else {
-                // 첫 번째 결과 (가장 최신)
-                const firstLink = jobLinks[0];
-                const href = firstLink.getAttribute('href');
-                const match = href.match(/\/jobs\/([a-f0-9-]+)/);
-                
-                if (match) {
-                    const jobId = match[1];
-                    addStatus(`✅ [${index + 1}] Job ID 발견: ${jobId.substring(0, 8)}...`, 'success');
-                    
-                    results.push({
-                        seed: seed,
-                        index: index,
-                        prompt: original,
-                        job_id: jobId,
-                        downloaded: true
-                    });
-                } else {
-                    addStatus(`⚠️ [${index + 1}] Job ID 추출 실패`, 'warning');
-                    results.push({
-                        seed: seed,
-                        index: index,
-                        prompt: original,
-                        job_id: null,
-                        downloaded: false,
-                        error: 'Job ID 추출 실패'
-                    });
-                }
-            }
-            
-            // 검색창 초기화
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await sleep(1000);
-            
-        } catch (error) {
-            addStatus(`❌ [${index + 1}] 오류: ${error.message}`, 'error');
-            results.push({
-                seed: seed,
-                index: index,
-                prompt: original,
-                job_id: null,
-                downloaded: false,
-                error: error.message
-            });
-        }
-    }
-    
-    addStatus('✅ Seed 검색 완료!', 'success');
-    return results;
-}
 
     // ============================================================================
     // 🏁 완료 처리
@@ -1153,15 +853,12 @@
         localStorage.setItem('MIDJOURNEY_ERRORS', JSON.stringify(state.errors));
         localStorage.setItem('MIDJOURNEY_COMPLETE_TIME', new Date().toISOString());
 
-        // jobMap 저장 (동시실행 시 다른 스크립트에서 참조 가능)
-        localStorage.setItem('MIDJOURNEY_JOB_MAP', JSON.stringify(state.jobMap));
-
         // UI 업데이트
         updateUI();
 
         addStatus(`━━━━━━━━━━━━━━━━━━━━━━`, 'info');
         addStatus(`🎉 자동화 완료!`, 'success');
-        addStatus(`⏱️ 소요 시간: ${duration}`, 'info');
+        addStatus(⏱️ 소요 시간: ${duration}`, 'info');
         addStatus(`✅ 성공: ${successCount}개`, 'success');
         if (errorCount > 0) {
             addStatus(`❌ 실패: ${errorCount}개`, 'error');
@@ -1623,93 +1320,7 @@
         }
     }
 
-    // ============================================================================
-    // 🐛 디버깅 함수 (전역 노출)
-    // ============================================================================
     
-    window.MJ_DEBUG = {
-        // Fetch 캡처된 Job ID들
-        getJobMap: function() {
-            console.log("=== Fetch 캡처된 Job ID들 ===");
-            if (state.jobMap.length === 0) {
-                console.log("(비어있음)");
-            } else {
-                state.jobMap.forEach((job, idx) => {
-                    console.log(`${idx + 1}. ID: ${job.jobId} | Prompt: ${job.prompt.substring(0, 50)}...`);
-                });
-            }
-            return state.jobMap;
-        },
-        
-        // DOM에 있는 Job ID들
-        getDomJobs: function() {
-            console.log("=== DOM에 있는 Job ID들 ===");
-            const links = document.querySelectorAll('a[href*="/jobs/"]');
-            const jobIds = [];
-            
-            links.forEach((link, idx) => {
-                const href = link.getAttribute('href');
-                const match = href.match(/\/jobs\/([a-f0-9-]+)/);
-                if (match) {
-                    const fullId = match[1];
-                    const shortId = fullId.substring(0, 8);
-                    console.log(`${idx + 1}. ${shortId}... (전체: ${fullId})`);
-                    jobIds.push(fullId);
-                }
-            });
-            
-            if (jobIds.length === 0) {
-                console.log("(비어있음)");
-            }
-            
-            return jobIds;
-        },
-        
-        // 비교
-        compare: function() {
-            console.log("=== 비교 분석 ===");
-            const fetchIds = state.jobMap.map(j => j.jobId);
-            const domIds = this.getDomJobs();
-            
-            console.log(`\nFetch 캡처: ${fetchIds.length}개`);
-            console.log(`DOM 존재: ${domIds.length}개`);
-            
-            // 매칭 확인
-            console.log("\n매칭 확인:");
-            fetchIds.forEach((fetchId, idx) => {
-                const found = domIds.some(domId => domId.startsWith(fetchId) || fetchId.startsWith(domId.substring(0, 8)));
-                console.log(`${idx + 1}. ${fetchId} → ${found ? '✅ 매칭' : '❌ 없음'}`);
-            });
-            
-            // 추가 Job (DOM에만 있는 것)
-            console.log("\nDOM에만 있는 Job:");
-            domIds.forEach(domId => {
-                const shortDomId = domId.substring(0, 8);
-                const found = fetchIds.some(fetchId => fetchId === shortDomId || domId.startsWith(fetchId));
-                if (!found) {
-                    console.log(`- ${shortDomId}...`);
-                }
-            });
-        },
-        
-        // 현재 상태
-        getState: function() {
-            return {
-                isRunning: state.isRunning,
-                totalPrompts: state.totalPrompts,
-                currentPromptIndex: state.currentPromptIndex,
-                results: state.results.length,
-                errors: state.errors.length,
-                jobMap: state.jobMap.length
-            };
-        }
-    };
-    
-    console.log("🐛 디버깅 함수 활성화됨! 사용법:");
-    console.log("  MJ_DEBUG.getJobMap()    - Fetch 캡처된 Job ID 확인");
-    console.log("  MJ_DEBUG.getDomJobs()   - DOM의 Job ID 확인");
-    console.log("  MJ_DEBUG.compare()      - 둘을 비교");
-    console.log("  MJ_DEBUG.getState()     - 현재 상태");
 
     // ============================================================================
     // 🚀 초기화
