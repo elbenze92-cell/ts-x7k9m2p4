@@ -522,7 +522,7 @@
                 }
                 
                 if (!foundStarting) {
-                    addStatus(⚠️ "Starting" 상태 미확인 (5초 이내)', 'warning');
+                    addStatus('⚠️ "Starting" 상태 미확인 (5초 이내)', 'warning');
                     addStatus('💡 Create 탭에서 수동 확인 필요', 'warning');
                 }
                 
@@ -821,7 +821,7 @@
         addStatus(`✅ 입력 완료 (${successCount}/${state.totalPrompts}개)`, 'success');
         
         if (successCount === 0) {
-            addStatus(⚠️ 생성 시작된 작업이 없습니다`, 'error');
+            addStatus(`⚠️생성 시작된 작업이 없습니다`, 'error');
             completeAutomation();
             return;
         }
@@ -858,7 +858,7 @@
 
         addStatus(`━━━━━━━━━━━━━━━━━━━━━━`, 'info');
         addStatus(`🎉 자동화 완료!`, 'success');
-        addStatus(⏱️ 소요 시간: ${duration}`, 'info');
+        addStatus(`소요 시간: ${duration}`, 'info');
         addStatus(`✅ 성공: ${successCount}개`, 'success');
         if (errorCount > 0) {
             addStatus(`❌ 실패: ${errorCount}개`, 'error');
