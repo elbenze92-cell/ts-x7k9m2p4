@@ -1,11 +1,11 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name         *create_video_viral.user 동영상 프롬프트
 // @namespace    http://tampermonkey.net/
 // @version      2.0.0
 // @description  Remix 스타일의 고품질 Sora 프롬프트 자동 생성 (JSON 저장) - 안정화 버전
 // @match        https://claude.ai/project/019acaca-ea51-707c-8a8e-32e084dee17d
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/create_viral.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/create_viral.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/create_viral.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/create_viral.user.js
 // @grant        none
 // ==/UserScript==
 
@@ -15,7 +15,7 @@
     console.log('🎬 Sora Script Generator v2.0 로드됨');
 
     // ============================================================
-    // 📚 단계별 프롬프트 (Remix 스타일)
+    // 📚 단계별 프롬프트 (Remix 스타일).
     // ============================================================
 
     const STEP_PROMPTS = [
