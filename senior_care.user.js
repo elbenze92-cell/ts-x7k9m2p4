@@ -5,8 +5,8 @@
 // @description  시니어 건강 정보 롱폼 대본 + 미드저니 프롬프트 자동 생성 (1시간 분량)
 // @author       Atobro
 // @match        https://claude.ai/project/01997090-4842-705e-959c-104f7974e9f1
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/senior_care.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/senior_care.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/senior_care.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/senior_care.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

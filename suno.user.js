@@ -5,8 +5,8 @@
 // @description  Suno 음악 생성 완전 자동화 - 생성, 완료 감지, 다운로드, Python 연동
 // @author       Atobro
 // @match        https://suno.com/*
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/suno.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/suno.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/suno.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/suno.user.js
 // @icon         https://suno.com/favicon.ico
 // @grant        GM_addStyle
 // @grant        GM_setValue

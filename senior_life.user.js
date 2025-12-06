@@ -5,8 +5,8 @@
 // @description  시니어 여성향 롱폼 대본 + 미드저니 프롬프트 자동 생성 (1시간 분량)
 // @author       Atobro
 // @match        https://claude.ai/project/01997090-b4f0-7559-bf17-32d6f35e6a8b
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/senior_life.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/senior_life.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/senior_life.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/senior_life.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

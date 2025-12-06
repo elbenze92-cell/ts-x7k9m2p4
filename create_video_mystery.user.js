@@ -5,8 +5,8 @@
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동)
 // @author       Atobro
 // @match        https://claude.ai/project/019ad902-3273-7147-8b4c-37dab3b1cd23
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/create_mystery.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/create_mystery.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/create_mystery.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/create_mystery.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

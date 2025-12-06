@@ -4,8 +4,8 @@
 // @version      1.0.1
 // @description  한국어 대본 → 24개 언어 자동 번역
 // @match        https://claude.ai/project/019acac9-ba7a-77dc-9eb2-91b0bba89308
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/translation.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/translation.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/translation.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/translation.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

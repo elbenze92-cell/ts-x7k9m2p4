@@ -5,8 +5,8 @@
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ
 // @author       You
 // @match        https://claude.ai/project/019ad8fb-7a25-735a-983c-5c4ccd96b519
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/remix_nature.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/remix_nature.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/remix_nature.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/remix_nature.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

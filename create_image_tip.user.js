@@ -5,8 +5,8 @@
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동)
 // @author       Atobro
 // @match        https://claude.ai/project/019ad8fd-1b0e-77f2-83b9-6706e3ff60d4
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/create_image_tip.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/scripts/create_image_tip.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/create_image_tip.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/ts-x7k9m2p4/main/create_image_tip.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

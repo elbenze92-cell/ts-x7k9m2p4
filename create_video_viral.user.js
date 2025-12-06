@@ -1,11 +1,11 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         *create_video_viral.user 동영상 프롬프트
 // @namespace    http://tampermonkey.net/
 // @version      2.0.1
 // @description  Remix 스타일의 고품질 Sora 프롬프트 자동 생성 (JSON 저장) - 안정화 버전
 // @match        https://claude.ai/project/019acaca-ea51-707c-8a8e-32e084dee17d
-// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/create_viral.user.js
-// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/scripts/create_viral.user.js
+// @updateURL    https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/create_viral.user.js
+// @downloadURL  https://raw.githubusercontent.com/elbenze92-cell/tampermonkey-scripts/main/create_viral.user.js
 // @grant        none
 // ==/UserScript==
 
