@@ -322,51 +322,62 @@
             name: "최종 출력 (대본 + 이미지 프롬프트)",
             prompt: `7단계: 최종 출력
 
-최종 대본과 이미지 프롬프트를 아래 형식으로 출력하세요.
+🚨 CRITICAL: 아래 형식을 **정확히** 따라야 합니다!
 
-📌 이미지 프롬프트 규칙:
-- 영어로 작성
-- 세로 비율 (9:16)
-- 각 6초 분량 장면에 해당
-- 동기부여 콘텐츠에 어울리는 시네마틱/감성적 스타일
-- 사람 얼굴은 피하거나 뒷모습/실루엣으로
+⛔ 절대 금지:
+- "Let me create..." 같은 메타 설명
+- "I need to..." 같은 과정 설명
+- 마커 밖에 어떠한 텍스트도 금지
+- 한국어 컨셉 설명 금지
 
-📌 장면 구성 예시 (10장 = 60초):
-1-2장: 기 (후킹 장면)
-3-4장: 승 (문제/고민 시각화)
-5-7장: 전 (반전/해결 장면)
-8-10장: 결 (희망/성취 장면)
+✅ 필수:
+- 마커 안에만 내용 작성
+- 이미지 프롬프트는 **영어**
+- 각 프롬프트는 **번호로 시작** (1. 2. 3. ...)
+- 10-15개 프롬프트 (넉넉하게)
 
 ---
 
-⚠️ 반드시 아래 형식 그대로 출력하세요.
-⚠️ 마커 바깥에는 절대 아무것도 쓰지 마세요.
-⚠️ "네", "알겠습니다" 같은 말도 금지.
-⚠️ 이미지 프롬프트는 생성 실패를 대비하여 넉넉하게 최소 10개 이상 15개까지! 각각 번호(1. 2. 3...)로 시작하고 줄바꿈으로 구분!
+📌 이미지 프롬프트 작성 규칙:
+- 완전한 영어 문장
+- 9:16 명시
+- 시네마틱/감성적 스타일
+- 사람 얼굴 피하거나 뒷모습/실루엣
+- 각 프롬프트 50-80단어
+
+📌 장면 구성 (대본 내용 기반):
+1-2장: 기 - 후킹 장면
+3-4장: 승 - 문제 시각화
+5-7장: 전 - 반전/돌파
+8-10장: 결 - 희망/성취
+
+---
+
+🎯 출력 형식 (이것만 출력):
 
 ---SCRIPT_START---
-(6단계에서 선택한 최종 대본만, 줄바꿈 포함)
+요즘 뭐 하나 제대로 되는 게 없죠
+열심히 하는데 결과가 안 나오고
+(... 6단계 최종 대본 전체 ...)
 ---SCRIPT_END---
 
 ---PROMPTS_START---
-1. A silhouette of a person standing at crossroads during golden hour, dramatic lighting, cinematic composition, 9:16
-2. Close-up of hands holding crumpled paper, dark moody atmosphere, shallow depth of field, 9:16 aspect ratio
-3. Person sitting alone on park bench at night, city lights blurred in background, melancholic mood, vertical composition, 9:16
-4. Sunrise breaking through storm clouds, rays of light, hope and new beginning concept, dramatic sky, 9:16 
-5. Back view of person climbing steep mountain path, determination concept, epic landscape, vertical cinematic shot, 9:16
-6. Hands breaking through chains, freedom and breakthrough concept, dramatic lighting, dark background, 9:16
-7. Person standing on mountain peak with arms raised, victory pose, sunrise, inspirational mood, 9:16
-8. Close-up of eyes with reflection of sunrise, hope and vision concept, emotional portrait style, 9:16
-9. Person running towards bright light at end of tunnel, metaphor for success, dramatic composition, 9:16
-10. Silhouette celebrating on rooftop at sunset, city skyline background, achievement concept, 9:16 cinematic
-11.넉넉하게
-12.넉넉하게
-13.넉넉하게
-14.넉넉하게
-15.넉넉하게
----PROMPTS_END---
-
-⚠️ 위 예시처럼 각 프롬프트를 번호로 시작하고, 대본 내용에 맞게 장면을 수정해서 작성하세요!`
+1. Exhausted person staring at laptop screen in dimly lit room, overwhelmed and stressed expression, dark moody atmosphere, cinematic lighting, shallow depth of field, 9:16 vertical composition
+2. Multiple crumpled rejection letters scattered on wooden desk, single desk lamp illuminating papers, despair concept, dramatic shadows, 9:16 aspect ratio
+3. Back view of person exercising alone in empty gym, no results feeling, melancholic mood, muted colors, cinematic framing, 9:16
+4. Close-up of brain illustration with dark clouds and negative thoughts visualization, mental struggle concept, abstract artistic style, 9:16
+5. Dramatic shot of rocket breaking through Earth's atmosphere, intense fire and smoke, resistance visualization, epic scale, cinematic lighting, 9:16
+6. Underground gold mine tunnel with pickaxe, just 3 feet before gold vein metaphor, dim lighting, perseverance concept, vertical composition, 9:16
+7. Small crack of golden light appearing in darkness, breakthrough moment, hope emerging, dramatic lighting contrast, 9:16 cinematic
+8. Beautiful sunrise breaking through storm clouds, rays of light piercing darkness, new hope and beginning concept, epic sky, 9:16
+9. Silhouette of person taking one determined step forward on mountain path, perseverance visualization, inspiring mood, golden hour lighting, 9:16
+10. Back view of person reaching towards bright goal just ahead, almost there concept, silhouette against light, inspirational composition, 9:16
+11. Hands holding small flickering candle in darkness, not giving up today concept, intimate close-up, emotional mood, 9:16
+12. Person's shadow stretching towards distant mountain peak, journey visualization, determination, cinematic landscape, 9:16
+13. Close-up of determined eyes with reflection of light, inner strength concept, emotional portrait, dramatic lighting, 9:16
+14. Silhouette standing at edge of cliff facing sunrise, overcoming fear, inspirational mood, epic landscape, 9:16
+15. Victory pose silhouette on mountain summit at golden hour, achievement and success, cityscape far below, cinematic composition, 9:16
+---PROMPTS_END---`
         }
     ];
 
