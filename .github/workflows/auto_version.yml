@@ -1,0 +1,122 @@
+name: Auto Bump Tampermonkey Versions
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '**/*.user.js'  # 🔥 하위 폴더 포함
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # 🔥 전체 히스토리 가져오기
+      
+      - name: Check if triggered by bot
+        id: check-author
+        run: |
+          LAST_AUTHOR=$(git log -1 --pretty=format:'%an')
+          echo "last_author=$LAST_AUTHOR" >> $GITHUB_OUTPUT
+          
+          if [ "$LAST_AUTHOR" = "GitHub Actions Bot" ]; then
+            echo "is_bot=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_bot=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Auto bump version
+        if: steps.check-author.outputs.is_bot != 'true'
+        run: |
+          echo "🔢 버전 자동 증가 시작..."
+          echo ""
+          
+          changed_files=$(git diff-tree --no-commit-id --name-only -r HEAD | grep '\.user\.js$' || true)
+          
+          if [ -z "$changed_files" ]; then
+            echo "⚠️ 변경된 .user.js 파일 없음"
+            exit 0
+          fi
+          
+          for file in $changed_files; do
+            if [ -f "$file" ]; then
+              echo "📝 처리 중: $file"
+              
+              current_version=$(grep -oP '@version\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$file" | head -1)
+              
+              if [ -z "$current_version" ]; then
+                echo "   ⚠️ @version 태그 없음, 건너뜀"
+                echo ""
+                continue
+              fi
+              
+              IFS='.' read -r major minor patch <<< "$current_version"
+              
+              patch=$((patch + 1))
+              
+              if [ $patch -ge 10 ]; then
+                patch=0
+                minor=$((minor + 1))
+              fi
+              
+              if [ $minor -ge 10 ]; then
+                minor=0
+                major=$((major + 1))
+              fi
+              
+              new_version="$major.$minor.$patch"
+              
+              echo "   📌 $current_version → $new_version"
+              
+              # 🔥 sed 명령어 개선 (공백 유지)
+              if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                sed -i '' "s/@version[[:space:]]*$current_version/@version      $new_version/" "$file"
+              else
+                # Linux
+                sed -i "s/@version[[:space:]]*$current_version/@version      $new_version/" "$file"
+              fi
+              
+              echo "   ✅ 완료"
+              echo ""
+            fi
+          done
+          
+          echo "✅ 버전 증가 완료!"
+      
+      - name: Commit changes
+        if: steps.check-author.outputs.is_bot != 'true'
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          # 🔥 변경된 .user.js 파일만 add
+          git add '*.user.js' || true
+          git add '**/*.user.js' || true
+          
+          if git diff --staged --quiet; then
+            echo "ℹ️ 변경사항 없음 (버전이 이미 최신이거나 @version 태그 없음)"
+          else
+            git commit -m "chore: auto bump versions [skip ci]"
+            git push
+            echo "✅ 변경사항 푸시 완료!"
+          fi
+      
+      - name: Summary
+        if: steps.check-author.outputs.is_bot != 'true'
+        run: |
+          echo "### 🎉 자동 버전 업데이트 완료!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**업데이트된 파일:**" >> $GITHUB_STEP_SUMMARY
+          
+          # 🔥 하위 폴더 포함 검색
+          find . -name "*.user.js" -type f | while read file; do
+            if [ -f "$file" ]; then
+              version=$(grep -oP '@version\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$file" | head -1)
+              echo "- \`$file\`: v$version" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
