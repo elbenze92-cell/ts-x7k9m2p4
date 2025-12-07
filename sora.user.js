@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         @동영상 Sora 완전 자동화 (Python 연동) v2.0
 // @namespace    https://atobro.com/
-// @version      2.2.0
+// @version      2.2.1
 // @description  Sora 영상 생성 완전 자동화 - Storyboard 모드, 연속 생성, Drafts 다운로드, Python 연동
 // @author       Atobro
 // @match        https://sora.chatgpt.com/*

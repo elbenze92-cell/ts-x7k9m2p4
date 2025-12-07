@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         *Remix animals 대본 각색
 // @namespace    http://tampermonkey.net/
-// @version      2.2.0
+// @version      2.2.1
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ
 // @author       You
 // @match        https://claude.ai/project/019ad855-0d28-705d-92c8-ee6471120a1c

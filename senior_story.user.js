@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         *senior story 대본 생성
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
+// @version      2.0.1
 // @description  시니어 여성향 롱폼 대본 + 미드저니 프롬프트 자동 생성 (1시간 분량)
 // @author       Atobro
 // @match        https://claude.ai/project/019ad900-4d2f-7021-bf0c-3db0d3cb8f0b

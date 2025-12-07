@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         *Remix Viral 대본 각색
 // @namespace    http://tampermonkey.net/
-// @version      2.2.0
+// @version      2.2.1
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ
 // @author       You
 // @match        https://claude.ai/project/01991c1a-bda0-7027-be91-791334cdd410

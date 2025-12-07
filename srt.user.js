@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         #SRT Generator 자막 교정
 // @namespace    atobro
-// @version      2.2.0
+// @version      2.2.1
 // @description  Whisper → SRT 자동 생성
 // @match        https://claude.ai/project/019acaca-6f06-702b-a145-2d851ad72936
 // @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/srt.user.js
