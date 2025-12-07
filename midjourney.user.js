@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         @이미지 Midjourney 완전 자동화 (Python 연동)
 // @namespace    https://atobro.com/
-// @version      2.2.0
+// @version      2.2.1
 // @description  Midjourney 이미지 생성 완전 자동화 - 프롬프트 입력, 설정, 생성 대기, CDN 다운로드, Python 연동
 // @author       Atobro
 // @match        https://www.midjourney.com/*
