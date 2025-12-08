@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         *Remix Viral 대본 각색
+// @name         Claude Automation - remix_viral
 // @namespace    http://tampermonkey.net/
 // @version      2.2.2
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ

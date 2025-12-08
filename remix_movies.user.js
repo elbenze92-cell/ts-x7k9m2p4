@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         *Remix nature 대본 각색
+// @name         Claude Automation - remix_movies
 // @namespace    http://tampermonkey.net/
-// @version      2.0.2
+// @version      2.2.2
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ
 // @author       You
-// @match        https://claude.ai/project/019ad8fb-7a25-735a-983c-5c4ccd96b519
-// @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/remix_nature.user.js
-// @downloadURL  https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/remix_nature.user.js
+// @match        https://claude.ai/project/01996480-4e0b-7649-8e84-fc88d8199c78
+// @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/remix_tip.user.js
+// @downloadURL  https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/remix_tip.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

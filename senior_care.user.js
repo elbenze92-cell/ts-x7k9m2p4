@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         *senior care 대본 생성
+// @name         Claude Automation - senior_care
 // @namespace    http://tampermonkey.net/
 // @version      2.2.2
 // @description  시니어 건강 정보 롱폼 대본 + 미드저니 프롬프트 자동 생성 (1시간 분량)

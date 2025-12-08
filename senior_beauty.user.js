@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         여분8
+// @name         Claude Automation - senior_beauty
 // @namespace    http://tampermonkey.net/
 // @version      2.2.2
 // @description  롱폼 대본 분석 후 숏츠 생성 - 수동 다운로드 버전
