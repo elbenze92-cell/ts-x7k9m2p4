@@ -15,10 +15,8 @@
     'use strict';
 
 
-$popupCode = @'
-
 // ============================================================
-// Claude 팝업 강력 차단 (MutationObserver)
+// Claude 팝업 차단
 // ============================================================
 (function() {
     'use strict';
@@ -28,45 +26,28 @@ $popupCode = @'
             const text = dialog.textContent || '';
             if (text.includes('Claude를 계속') || text.includes('Continue using') || 
                 text.includes('사용하시겠어요') || text.includes('usage') || text.includes('상위 플랜')) {
-                console.log('🔥 Claude 팝업 강제 제거!');
+                console.log('🔥 팝업 제거');
                 dialog.remove();
             }
         });
         
-        document.querySelectorAll('[class*="backdrop"], [class*="overlay"], [class*="modal"], [style*="position: fixed"]').forEach(el => {
+        document.querySelectorAll('[class*="backdrop"], [class*="overlay"], [class*="modal"]').forEach(el => {
             const style = window.getComputedStyle(el);
             const zIndex = parseInt(style.zIndex) || 0;
-            const position = style.position;
-            const bgColor = style.backgroundColor;
             
-            if ((zIndex > 999 || position === 'fixed') && (bgColor.includes('rgba') || bgColor.includes('rgb'))) {
-                console.log('🔥 오버레이 제거:', el.className);
+            if (zIndex > 999 && style.position === 'fixed') {
+                console.log('🔥 오버레이 제거');
                 el.remove();
             }
         });
         
         document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.documentElement.style.overflow = '';
-        document.querySelectorAll('[inert]').forEach(el => {
-            el.removeAttribute('inert');
-        });
+        document.querySelectorAll('[inert]').forEach(el => el.removeAttribute('inert'));
     }
     
-    const observer = new MutationObserver(() => killPopup());
+    const observer = new MutationObserver(killPopup);
     observer.observe(document.body, { childList: true, subtree: true });
-    setInterval(killPopup, 500);
+    setInterval(killPopup, 2000);
     
-    console.log('✅ Claude 팝업 차단 활성화됨 (오버레이 강화)');
+    console.log('✅ 팝업 차단 활성화');
 })();
-'@
-
-Get-ChildItem *.user.js | ForEach-Object {
-    $content = Get-Content $_.FullName -Raw -Encoding UTF8
-    if ($content -notmatch 'Claude 팝업 강력 차단') {
-        Add-Content $_.FullName $popupCode -Encoding UTF8 -NoNewline
-        Write-Host "✅ $($_.Name)"
-    } else {
-        Write-Host "⏭️ $($_.Name) (이미 있음)"
-    }
-}

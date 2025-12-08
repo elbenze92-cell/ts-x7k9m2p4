@@ -19,7 +19,7 @@
     'use strict';
 
     // ============================================================================
-    // 🔧 설정1.2
+    // 🔧 설정 2.2.1.
     // ============================================================================
     const CONFIG = {
         // 폴링 간격 (ms)
@@ -790,32 +790,81 @@
             state.currentPromptIndex = i;
             updateProgress();
             
+            // 🔥 큐 체크 + 대기 로직
+            let queueCount = getQueuedJobsCount();
+            let waitCount = 0;
+            
+            // 큐가 8개 이상이면 대기 (Midjourney 최대 큐: 10-12개)
+            while (queueCount >= 8 && waitCount < 60) {
+                addStatus(`⏳ 큐 대기 중 (${queueCount}개 작업) - ${waitCount * 10}초 경과`, 'warning');
+                await sleep(10000);  // 10초 대기
+                queueCount = getQueuedJobsCount();
+                waitCount++;
+                
+                // 30초마다 상태 갱신
+                if (waitCount % 3 === 0) {
+                    updateProgress();
+                }
+            }
+            
+            if (waitCount >= 60) {
+                addStatus(`❌ [${i + 1}] 큐 타임아웃 (10분 대기) - 건너뛰기`, 'error');
+                state.errors.push({
+                    index: i,
+                    prompt: prompt,
+                    error: '큐 타임아웃'
+                });
+                continue;
+            }
+            
+            if (waitCount > 0) {
+                addStatus(`✅ 큐 여유 확보 (${queueCount}개) - 입력 재개`, 'success');
+            }
+            
             addStatus(`📝 [${i + 1}/${state.totalPrompts}] 입력 중...`, 'info');
             
-            try {
-                const inputSuccess = await inputPrompt(prompt);
-                
-                if (inputSuccess) {
-                    addStatus(`✅ [${i + 1}] 입력 성공`, 'success');
-                    successCount++;
-                } else {
-                    addStatus(`❌ [${i + 1}] 입력 실패`, 'error');
-                    state.errors.push({ 
-                        index: i, 
-                        prompt: prompt,
-                        error: '입력 실패'
-                    });
+            // 🔥 재시도 로직 (최대 3회)
+            let inputSuccess = false;
+            
+            for (let retry = 0; retry < 3; retry++) {
+                if (retry > 0) {
+                    addStatus(`🔄 [${i + 1}] 재시도 ${retry}/2...`, 'warning');
+                    await sleep(3000);
                 }
-            } catch (error) {
-                addStatus(`❌ [${i + 1}] 오류: ${error.message}`, 'error');
-                state.errors.push({ 
-                    index: i, 
+                
+                try {
+                    inputSuccess = await inputPrompt(prompt);
+                    
+                    if (inputSuccess) {
+                        addStatus(`✅ [${i + 1}] 입력 성공`, 'success');
+                        successCount++;
+                        break;  // 성공하면 재시도 중단
+                    }
+                } catch (error) {
+                    addStatus(`❌ [${i + 1}] 시도 ${retry + 1} 실패: ${error.message}`, 'error');
+                    
+                    // 마지막 재시도에서도 실패하면 에러 기록
+                    if (retry === 2) {
+                        state.errors.push({
+                            index: i,
+                            prompt: prompt,
+                            error: error.message
+                        });
+                    }
+                }
+            }
+            
+            // 3회 재시도 후에도 실패
+            if (!inputSuccess) {
+                addStatus(`❌ [${i + 1}] 입력 실패 (3회 재시도 완료)`, 'error');
+                state.errors.push({
+                    index: i,
                     prompt: prompt,
-                    error: error.message
+                    error: '입력 실패 (3회 재시도)'
                 });
             }
             
-            await sleep(5000);  // 🔥 5초로 증가 (프롬프트 간 여유)
+            await sleep(5000);  // 프롬프트 간 여유
         }
         
         addStatus(`✅ 입력 완료 (${successCount}/${state.totalPrompts}개)`, 'success');
@@ -1340,10 +1389,8 @@
 })();
 
 
-$popupCode = @'
-
 // ============================================================
-// Claude 팝업 강력 차단 (MutationObserver)
+// Claude 팝업 차단
 // ============================================================
 (function() {
     'use strict';
@@ -1353,45 +1400,28 @@ $popupCode = @'
             const text = dialog.textContent || '';
             if (text.includes('Claude를 계속') || text.includes('Continue using') || 
                 text.includes('사용하시겠어요') || text.includes('usage') || text.includes('상위 플랜')) {
-                console.log('🔥 Claude 팝업 강제 제거!');
+                console.log('🔥 팝업 제거');
                 dialog.remove();
             }
         });
         
-        document.querySelectorAll('[class*="backdrop"], [class*="overlay"], [class*="modal"], [style*="position: fixed"]').forEach(el => {
+        document.querySelectorAll('[class*="backdrop"], [class*="overlay"], [class*="modal"]').forEach(el => {
             const style = window.getComputedStyle(el);
             const zIndex = parseInt(style.zIndex) || 0;
-            const position = style.position;
-            const bgColor = style.backgroundColor;
             
-            if ((zIndex > 999 || position === 'fixed') && (bgColor.includes('rgba') || bgColor.includes('rgb'))) {
-                console.log('🔥 오버레이 제거:', el.className);
+            if (zIndex > 999 && style.position === 'fixed') {
+                console.log('🔥 오버레이 제거');
                 el.remove();
             }
         });
         
         document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.documentElement.style.overflow = '';
-        document.querySelectorAll('[inert]').forEach(el => {
-            el.removeAttribute('inert');
-        });
+        document.querySelectorAll('[inert]').forEach(el => el.removeAttribute('inert'));
     }
     
-    const observer = new MutationObserver(() => killPopup());
+    const observer = new MutationObserver(killPopup);
     observer.observe(document.body, { childList: true, subtree: true });
-    setInterval(killPopup, 500);
+    setInterval(killPopup, 2000);
     
-    console.log('✅ Claude 팝업 차단 활성화됨 (오버레이 강화)');
+    console.log('✅ 팝업 차단 활성화');
 })();
-'@
-
-Get-ChildItem *.user.js | ForEach-Object {
-    $content = Get-Content $_.FullName -Raw -Encoding UTF8
-    if ($content -notmatch 'Claude 팝업 강력 차단') {
-        Add-Content $_.FullName $popupCode -Encoding UTF8 -NoNewline
-        Write-Host "✅ $($_.Name)"
-    } else {
-        Write-Host "⏭️ $($_.Name) (이미 있음)"
-    }
-}
