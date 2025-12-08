@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         #Translation Automation 대본 번역
 // @namespace    atobro
-// @version      2.2.1
+// @version      2.2.2
 // @description  한국어 대본 → 24개 언어 자동 번역
 // @match        https://claude.ai/project/019acac9-ba7a-77dc-9eb2-91b0bba89308
 // @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/translation.user.js

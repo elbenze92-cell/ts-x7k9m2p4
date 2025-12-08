@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         *senior guide 대본 생성
 // @namespace    http://tampermonkey.net/
-// @version      2.0.1
+// @version      2.0.2
 // @description  시니어 건강 정보 롱폼 대본 + 미드저니 프롬프트 자동 생성 (1시간 분량)
 // @author       Atobro
 // @match        https://claude.ai/project/019ad8ff-9135-73af-a695-9b82a73468cc
