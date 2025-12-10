@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_edm_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  EDM 음악 롱폼 25곡
 // @author       Atobro
 // @match        https://claude.ai/project/019b085a-e7fe-75ed-bdd0-8f78f3060825

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_money_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 재테크/연금 롱폼 20개 주제
 // @author       Atobro
 // @match        https://claude.ai/project/019ad90c-a842-717c-9f99-de1450aaf80c

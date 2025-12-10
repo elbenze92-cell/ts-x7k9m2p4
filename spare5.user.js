@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         senior family ?€ë³??ì„±
 // @namespace    http://tampermonkey.net/
-// @version      2.0.2
+// @version      2.0.3
 // @description  ?œë‹ˆ???¬ì„±??ë¡±í¼ ?€ë³?+ ë¯¸ë“œ?€???„ë¡¬?„íŠ¸ ?ë™ ?ì„± (1?œê°„ ë¶„ëŸ‰)
 // @author       Atobro
 // @match        https://claude.ai/project/01997090-b4f0-7559-bf17-32d6f35e6a8b

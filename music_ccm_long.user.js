@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_ccm_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  CCM 음악 롱폼 25곡
 // @author       Atobro
 // @match        https://claude.ai/project/019b085a-657d-73c7-9ecb-380ae7c7631c

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_ballad_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  발라드 음악 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b085b-fafc-77fc-abb6-7d1f35b3e0f2

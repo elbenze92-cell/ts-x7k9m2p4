@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_kpop_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  K-POP 음악 롱폼 25곡
 // @author       Atobro
 // @match        https://claude.ai/project/019b085a-add0-757b-a826-a4dd30bb51bb

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_family_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 가족 롱폼 20개 주제 생성
 // @author       Atobro
 // @match        https://claude.ai/project/019ad90a-bb43-70a5-a78a-4adccc41351a

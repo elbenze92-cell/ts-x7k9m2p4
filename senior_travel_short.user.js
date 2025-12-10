@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_travel_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 여행 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b0859-5431-7086-8528-a439e72ce69b

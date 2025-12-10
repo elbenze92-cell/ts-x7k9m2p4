@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_hobby_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 취미 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b0859-74f1-775e-a276-0c841b53f771

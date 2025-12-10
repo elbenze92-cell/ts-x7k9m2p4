@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_story_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 스토리 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b0859-fb77-74a8-9eaa-1cc732eeb84e

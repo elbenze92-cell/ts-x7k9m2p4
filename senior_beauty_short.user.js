@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_beauty_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 뷰티 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b0859-aa3c-733b-ad67-0fd858438a23
