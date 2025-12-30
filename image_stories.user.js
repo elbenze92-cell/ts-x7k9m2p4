@@ -1,12 +1,12 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         *image_stories_user 대본 생성
 // @namespace    http://tampermonkey.net/
 // @version      2.0.6
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동)
 // @author       Atobro
 // @match        https://claude.ai/project/01991e6d-41c6-7177-93ce-65687a23a022
-// @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/create_image_mystery.user.js
-// @downloadURL  https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/create_image_mystery.user.js
+// @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/image_stories.user.js
+// @downloadURL  https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/image_stories.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==

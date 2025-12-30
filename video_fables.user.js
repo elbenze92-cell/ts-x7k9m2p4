@@ -1,12 +1,12 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         *create_video_mystery.user 대본 생성
 // @namespace    http://tampermonkey.net/
 // @version      2.0.2
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동)
 // @author       Atobro
 // @match        https://claude.ai/project/019ad902-3273-7147-8b4c-37dab3b1cd23
-// @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/create_mystery.user.js
-// @downloadURL  https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/create_mystery.user.js
+// @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/video_fables.user.js
+// @downloadURL  https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/video_fables.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==
