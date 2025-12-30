@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         *image_inspire_user 대본 생성
 // @namespace    http://tampermonkey.net/
-// @version      2.1.1
+// @version      2.1.2
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동).
 // @author       Atobro.
 // @match        https://claude.ai/project/019acacd-561c-73cb-a931-99d770d0a0f4
