@@ -1,5 +1,5 @@
 ﻿// ==UserScript==
-// @name         *Create_image_motive 대본 생성
+// @name         *image_inspire_user 대본 생성
 // @namespace    http://tampermonkey.net/
 // @version      2.0.2
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동).
@@ -335,6 +335,7 @@
 - 이미지 프롬프트는 **영어**
 - 각 프롬프트는 **번호로 시작** (1. 2. 3. ...)
 - 10-15개 프롬프트 (넉넉하게)
+- **PROMPTS + SCENES 둘 다 출력**
 
 ---
 
@@ -343,7 +344,7 @@
 - 9:16 명시
 - 시네마틱/감성적 스타일
 - 사람 얼굴 피하거나 뒷모습/실루엣
-- 각 프롬프트 50-80단어
+- 각 프롬프트 50-180단어
 
 📌 장면 구성 (대본 내용 기반):
 1-2장: 기 - 후킹 장면
@@ -353,11 +354,25 @@
 
 ---
 
-🎯 출력 형식 (이것만 출력):
+🎯 출력 형식 (3개 마커 모두 출력):
 
 ---SCRIPT_START---
 요즘 뭐 하나 제대로 되는 게 없죠
 열심히 하는데 결과가 안 나오고
+노력해도 달라지는 게 없고
+이러다 진짜 안 되는 거 아닌가 싶죠
+근데 알아요?
+지금 이 순간이 제일 힘든 거예요
+로켓이 지구를 벗어날 때
+가장 많은 연료를 쓰는 것처럼
+지금 당신도 저항이 제일 센 구간을 지나는 중이에요
+포기하고 싶죠
+근데 금 캐는 사람들 있잖아요
+딱 3피트만 더 팠으면 금맥이었는데
+거기서 포기한 사람이 제일 많대요
+지금 조금만 더 버텨보세요
+오늘 하루만 포기하지 마세요
+내일은 몰라도 오늘만큼은요
 (... 6단계 최종 대본 전체 ...)
 ---SCRIPT_END---
 
@@ -377,7 +392,24 @@
 13. Close-up of determined eyes with reflection of light, inner strength concept, emotional portrait, dramatic lighting, 9:16
 14. Silhouette standing at edge of cliff facing sunrise, overcoming fear, inspirational mood, epic landscape, 9:16
 15. Victory pose silhouette on mountain summit at golden hour, achievement and success, cityscape far below, cinematic composition, 9:16
----PROMPTS_END---`
+---PROMPTS_END---
+
+---SCENES_START---
+1. lines: 1-2 | image: 1
+2. lines: 3-4 | image: 2
+3. lines: 5-6 | image: 3
+4. lines: 7-8 | image: 4
+5. lines: 9-10 | image: 5
+6. lines: 11-12 | image: 6
+7. lines: 13-14 | image: 7
+8. lines: 15-16 | image: 8
+---SCENES_END---
+
+⚠️ SCENES 설명:
+- lines: 대본 줄 번호 (1부터 시작)
+- image: PROMPTS의 이미지 번호
+- 모든 대본 줄이 빠짐없이 커버되어야 함
+- 대본 줄 수에 맞게 조정할 것`
         }
     ];
 
@@ -784,6 +816,8 @@
                     const scriptEnd = '---SCRIPT_END---';
                     const promptsStart = '---PROMPTS_START---';
                     const promptsEnd = '---PROMPTS_END---';
+                    const scenesStart = '---SCENES_START---';
+                    const scenesEnd = '---SCENES_END---';
 
                     if (responseText.includes(scriptStart) && responseText.includes(scriptEnd)) {
                         console.log(`🔍 응답 #${i}에서 마커 발견`);
@@ -793,7 +827,7 @@
                         const scriptEndIdx = responseText.indexOf(scriptEnd);
                         const cleanScript = responseText.substring(scriptStartIdx, scriptEndIdx).trim();
 
-                        // 이미지 프롬프트 추출
+                        // 이미지 프롬프트 추출 (기존 로직 유지)
                         let imagePrompts = [];
                         if (responseText.includes(promptsStart) && responseText.includes(promptsEnd)) {
                             const promptsStartIdx = responseText.indexOf(promptsStart) + promptsStart.length;
@@ -814,26 +848,70 @@
                             }
                         }
 
+                        // 🔥 scenes 매핑 추출 (새로 추가)
+                        let scenes = [];
+                        if (responseText.includes(scenesStart) && responseText.includes(scenesEnd)) {
+                            const scenesStartIdx = responseText.indexOf(scenesStart) + scenesStart.length;
+                            const scenesEndIdx = responseText.indexOf(scenesEnd);
+                            const scenesText = responseText.substring(scenesStartIdx, scenesEndIdx).trim();
+
+                            // 각 줄 파싱: "1. lines: 1-2 | image: 1"
+                            const sceneLines = scenesText.split('\n').filter(line => line.trim().length > 5);
+                            
+                            for (const line of sceneLines) {
+                                // 형식: "1. lines: 1-2 | image: 1"
+                                const match = line.match(/^\d+\.\s*lines:\s*(\d+)-(\d+)\s*\|\s*image:\s*(\d+)/i);
+                                
+                                if (match) {
+                                    const startLine = parseInt(match[1]);
+                                    const endLine = parseInt(match[2]);
+                                    const imageIdx = parseInt(match[3]) - 1; // 0-based index
+                                    
+                                    // lines 배열 생성 (1-3 → [1, 2, 3])
+                                    const lines = [];
+                                    for (let l = startLine; l <= endLine; l++) {
+                                        lines.push(l);
+                                    }
+                                    
+                                    scenes.push({
+                                        lines: lines,
+                                        image_index: imageIdx
+                                    });
+                                }
+                            }
+                            
+                            console.log(`   - scenes 매핑: ${scenes.length}개`);
+                        }
+
                         console.log('✅ 마커 기반 추출 성공!');
                         console.log('   - 대본:', cleanScript.length, '글자');
                         console.log('   - 이미지 프롬프트:', imagePrompts.length, '개');
+                        console.log('   - scenes 매핑:', scenes.length, '개');
 
-                        // 🔥 대본만 저장
+                        // 🔥 대본 저장
                         localStorage.setItem('FINAL_SCRIPT', cleanScript);
                         window.FINAL_SCRIPT_FOR_PYTHON = cleanScript;
 
-                        // 🔥 이미지 프롬프트 별도 저장
+                        // 🔥 이미지 프롬프트 저장 (기존 유지)
                         if (imagePrompts.length > 0) {
                             const promptsJson = JSON.stringify(imagePrompts);
                             localStorage.setItem('IMAGE_PROMPTS', promptsJson);
                             window.IMAGE_PROMPTS = imagePrompts;
 
-                            // MOTIVATION_SCRIPT_JSON에 image_prompts만 저장
+                            // 🔥 MOTIVATION_SCRIPT_JSON에 image_prompts + scenes 저장
                             const motivationData = {
-                                image_prompts: imagePrompts
+                                image_prompts: imagePrompts,
+                                scenes: scenes.length > 0 ? scenes : null
                             };
                             localStorage.setItem('MOTIVATION_SCRIPT_JSON', JSON.stringify(motivationData));
                             window.MOTIVATION_SCRIPT_JSON = motivationData;
+                        }
+
+                        // 🔥 scenes 별도 저장
+                        if (scenes.length > 0) {
+                            localStorage.setItem('SCENES_MAPPING', JSON.stringify(scenes));
+                            window.SCENES_MAPPING = scenes;
+                            console.log('   ✅ scenes 매핑 저장 완료');
                         }
 
                         return cleanScript;

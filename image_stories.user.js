@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         *Create_image_mystery 대본 생성
+// @name         *image_stories_user 대본 생성
 // @namespace    http://tampermonkey.net/
 // @version      2.0.2
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동)
@@ -153,18 +153,44 @@
         },
         {
             name: "미드저니 프롬프트",
-            prompt: `미드저니 프롬프트 생성
+            prompt: `🚨 CRITICAL: 아래 형식을 **정확히** 따라야 합니다!
+
+⛔ 절대 금지:
+- "Let me create..." 같은 메타 설명
+- "I need to..." 같은 과정 설명
+- 마커 밖에 어떠한 텍스트도 금지
+- 한국어 컨셉 설명 금지
+
+✅ 필수:
+- 마커 안에만 내용 작성
+- 이미지 프롬프트는 **영어**
+- 각 프롬프트는 **번호로 시작** (1. 2. 3. ...)
+- 15개 프롬프트 이상 (넉넉하게)
+- **SCRIPT + PROMPTS + SCENES 3개 모두 출력**
 
 지금까지 작성한 최종 대본을 참고하여 각 문장에 해당하는 미드저니 프롬프트를 생성합니다.
 
 ✅ 조건:
 - 극사실주의 기반
-- 인물은 한국인
-- 최소 30장면 이상
+- 인물은 각 나라의 언어에 맞게
+- 10-15개 프롬프트
 - 영어로 작성
+- **PROMPTS + SCENES 둘 다 출력**
+
+📌 이미지 프롬프트 작성 규칙:
+- 완전한 영어 문장
+- 9:16 명시
+- 시네마틱/감성적 스타일
+- 각 프롬프트 50-180단어
+
+🎯 출력 형식 (3개 마커 모두 출력):
 
 각 장면을 번호 붙여서 코드블럭으로 작성해주세요.
-⚠️ 이미지 프롬프트는 반드시 10개! 각각 번호(1. 2. 3...)로 시작하고 줄바꿈으로 구분!
+⚠️ 이미지 프롬프트는 반드시 15개! 각각 번호(1. 2. 3...)로 시작하고 줄바꿈으로 구분!
+
+---SCRIPT_START---
+(11단계에서 출력한 최종 대본 전체를 여기에 다시 출력)
+---SCRIPT_END---
 
 ---PROMPTS_START---
 1. A silhouette of a person standing at crossroads during golden hour, dramatic lighting, cinematic composition, 9:16 vertical format
@@ -177,7 +203,31 @@
 8. Close-up of eyes with reflection of sunrise, hope and vision concept, emotional portrait style, 9:16
 9. Person running towards bright light at end of tunnel, metaphor for success, dramatic composition, vertical
 10. Silhouette celebrating on rooftop at sunset, city skyline background, achievement concept, 9:16 cinematic
+11. Hands holding small flickering candle in darkness, not giving up today concept, intimate close-up, emotional mood, 9:16
+12. Person's shadow stretching towards distant mountain peak, journey visualization, determination, cinematic landscape, 9:16
+13. Close-up of determined eyes with reflection of light, inner strength concept, emotional portrait, dramatic lighting, 9:16
+14. Silhouette standing at edge of cliff facing sunrise, overcoming fear, inspirational mood, epic landscape, 9:16
+15. Victory pose silhouette on mountain summit at golden hour, achievement and success, cityscape far below, cinematic composition, 9:16
 ---PROMPTS_END---
+
+---SCENES_START---
+1. lines: 1-2 | image: 1
+2. lines: 3-4 | image: 2
+3. lines: 5-6 | image: 3
+4. lines: 7-8 | image: 4
+5. lines: 9-10 | image: 5
+6. lines: 11-12 | image: 6
+7. lines: 13-14 | image: 7
+8. lines: 15-16 | image: 8
+9. lines: 17-18 | image: 9
+10. lines: 19-20 | image: 10
+---SCENES_END---
+
+⚠️ SCENES 설명:
+- lines: 대본 줄 번호 (1부터 시작)
+- image: PROMPTS의 이미지 번호
+- 모든 대본 줄이 빠짐없이 커버되어야 함
+- 대본 줄 수에 맞게 조정할 것
 
 ⚠️ 위 예시처럼 각 프롬프트를 번호로 시작하고, 대본 내용에 맞게 장면을 수정해서 작성하세요!`
         }
@@ -574,7 +624,7 @@
             console.log(`🔍 font-claude-response 개수: ${responses.length}`);
 
             // ============================================
-            // 🔥 7단계(마지막)에서만 마커 기반 추출
+            // 🔥 마지막 단계에서만 마커 기반 추출
             // ============================================
             if (currentStep === MAX_STEPS) {
                 // 모든 응답에서 마커 찾기 (역순)
@@ -586,6 +636,8 @@
                     const scriptEnd = '---SCRIPT_END---';
                     const promptsStart = '---PROMPTS_START---';
                     const promptsEnd = '---PROMPTS_END---';
+                    const scenesStart = '---SCENES_START---';
+                    const scenesEnd = '---SCENES_END---';
 
                     if (responseText.includes(scriptStart) && responseText.includes(scriptEnd)) {
                         console.log(`🔍 응답 #${i}에서 마커 발견`);
@@ -595,7 +647,7 @@
                         const scriptEndIdx = responseText.indexOf(scriptEnd);
                         const cleanScript = responseText.substring(scriptStartIdx, scriptEndIdx).trim();
 
-                        // 이미지 프롬프트 추출
+                        // 이미지 프롬프트 추출 (기존 로직 유지)
                         let imagePrompts = [];
                         if (responseText.includes(promptsStart) && responseText.includes(promptsEnd)) {
                             const promptsStartIdx = responseText.indexOf(promptsStart) + promptsStart.length;
@@ -616,33 +668,77 @@
                             }
                         }
 
+                        // 🔥 scenes 매핑 추출 (새로 추가)
+                        let scenes = [];
+                        if (responseText.includes(scenesStart) && responseText.includes(scenesEnd)) {
+                            const scenesStartIdx = responseText.indexOf(scenesStart) + scenesStart.length;
+                            const scenesEndIdx = responseText.indexOf(scenesEnd);
+                            const scenesText = responseText.substring(scenesStartIdx, scenesEndIdx).trim();
+
+                            // 각 줄 파싱: "1. lines: 1-2 | image: 1"
+                            const sceneLines = scenesText.split('\n').filter(line => line.trim().length > 5);
+                            
+                            for (const line of sceneLines) {
+                                // 형식: "1. lines: 1-2 | image: 1"
+                                const match = line.match(/^\d+\.\s*lines:\s*(\d+)-(\d+)\s*\|\s*image:\s*(\d+)/i);
+                                
+                                if (match) {
+                                    const startLine = parseInt(match[1]);
+                                    const endLine = parseInt(match[2]);
+                                    const imageIdx = parseInt(match[3]) - 1; // 0-based index
+                                    
+                                    // lines 배열 생성 (1-3 → [1, 2, 3])
+                                    const lines = [];
+                                    for (let l = startLine; l <= endLine; l++) {
+                                        lines.push(l);
+                                    }
+                                    
+                                    scenes.push({
+                                        lines: lines,
+                                        image_index: imageIdx
+                                    });
+                                }
+                            }
+                            
+                            console.log(`   - scenes 매핑: ${scenes.length}개`);
+                        }
+
                         console.log('✅ 마커 기반 추출 성공!');
                         console.log('   - 대본:', cleanScript.length, '글자');
                         console.log('   - 이미지 프롬프트:', imagePrompts.length, '개');
+                        console.log('   - scenes 매핑:', scenes.length, '개');
 
-                        // 🔥 대본만 저장
+                        // 🔥 대본 저장
                         localStorage.setItem('FINAL_SCRIPT', cleanScript);
                         window.FINAL_SCRIPT_FOR_PYTHON = cleanScript;
 
-                        // 🔥 이미지 프롬프트 별도 저장
+                        // 🔥 이미지 프롬프트 저장 (기존 유지)
                         if (imagePrompts.length > 0) {
                             const promptsJson = JSON.stringify(imagePrompts);
                             localStorage.setItem('IMAGE_PROMPTS', promptsJson);
                             window.IMAGE_PROMPTS = imagePrompts;
 
-                            // MOTIVATION_SCRIPT_JSON에 image_prompts만 저장
+                            // 🔥 MOTIVATION_SCRIPT_JSON에 image_prompts + scenes 저장
                             const motivationData = {
-                                image_prompts: imagePrompts
+                                image_prompts: imagePrompts,
+                                scenes: scenes.length > 0 ? scenes : null
                             };
                             localStorage.setItem('MOTIVATION_SCRIPT_JSON', JSON.stringify(motivationData));
                             window.MOTIVATION_SCRIPT_JSON = motivationData;
+                        }
+
+                        // 🔥 scenes 별도 저장
+                        if (scenes.length > 0) {
+                            localStorage.setItem('SCENES_MAPPING', JSON.stringify(scenes));
+                            window.SCENES_MAPPING = scenes;
+                            console.log('   ✅ scenes 매핑 저장 완료');
                         }
 
                         return cleanScript;
                     }
                 }
 
-                console.warn('⚠️ 7단계인데 마커 못 찾음');
+                console.warn('⚠️ 마지막 단계인데 마커 못 찾음');
             }
 
             // ============================================
