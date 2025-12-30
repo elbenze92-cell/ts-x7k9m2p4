@@ -322,76 +322,32 @@
             name: "최종 출력 (대본 + 이미지 프롬프트)",
             prompt: `7단계: 최종 출력
 
-🚨 CRITICAL: 아래 형식을 **정확히** 따라야 합니다!
+🚨🚨🚨 CRITICAL: 반드시 3개 마커 모두 출력해야 합니다! 🚨🚨🚨
+
+출력해야 할 마커 (하나라도 빠지면 실패):
+1. ---SCRIPT_START--- / ---SCRIPT_END---
+2. ---PROMPTS_START--- / ---PROMPTS_END---
+3. ---SCENES_START--- / ---SCENES_END---  ← 필수! 빠뜨리지 마!
 
 ⛔ 절대 금지:
+- 마커 생략 (3개 모두 필수!)
 - "Let me create..." 같은 메타 설명
-- "I need to..." 같은 과정 설명
 - 마커 밖에 어떠한 텍스트도 금지
-- 한국어 컨셉 설명 금지
-
-✅ 필수:
-- 마커 안에만 내용 작성
-- 이미지 프롬프트는 **영어**
-- 각 프롬프트는 **번호로 시작** (1. 2. 3. ...)
-- 10-15개 프롬프트 (넉넉하게)
-- **PROMPTS + SCENES 둘 다 출력**
 
 ---
 
-📌 이미지 프롬프트 작성 규칙:
-- 완전한 영어 문장
-- 9:16 명시
-- 시네마틱/감성적 스타일
-- 사람 얼굴 피하거나 뒷모습/실루엣
-- 각 프롬프트 50-180단어
-
-📌 장면 구성 (대본 내용 기반):
-1-2장: 기 - 후킹 장면
-3-4장: 승 - 문제 시각화
-5-7장: 전 - 반전/돌파
-8-10장: 결 - 희망/성취
-
----
-
-🎯 출력 형식 (3개 마커 모두 출력):
+🎯 출력 형식 (이 순서대로 정확히 출력):
 
 ---SCRIPT_START---
-요즘 뭐 하나 제대로 되는 게 없죠
-열심히 하는데 결과가 안 나오고
-노력해도 달라지는 게 없고
-이러다 진짜 안 되는 거 아닌가 싶죠
-근데 알아요?
-지금 이 순간이 제일 힘든 거예요
-로켓이 지구를 벗어날 때
-가장 많은 연료를 쓰는 것처럼
-지금 당신도 저항이 제일 센 구간을 지나는 중이에요
-포기하고 싶죠
-근데 금 캐는 사람들 있잖아요
-딱 3피트만 더 팠으면 금맥이었는데
-거기서 포기한 사람이 제일 많대요
-지금 조금만 더 버텨보세요
-오늘 하루만 포기하지 마세요
-내일은 몰라도 오늘만큼은요
-(... 6단계 최종 대본 전체 ...)
+(6단계 최종 대본 전체를 여기에)
 ---SCRIPT_END---
 
 ---PROMPTS_START---
-1. Exhausted person staring at laptop screen in dimly lit room, overwhelmed and stressed expression, dark moody atmosphere, cinematic lighting, shallow depth of field, 9:16 vertical composition
-2. Multiple crumpled rejection letters scattered on wooden desk, single desk lamp illuminating papers, despair concept, dramatic shadows, 9:16 aspect ratio
-3. Back view of person exercising alone in empty gym, no results feeling, melancholic mood, muted colors, cinematic framing, 9:16
-4. Close-up of brain illustration with dark clouds and negative thoughts visualization, mental struggle concept, abstract artistic style, 9:16
-5. Dramatic shot of rocket breaking through Earth's atmosphere, intense fire and smoke, resistance visualization, epic scale, cinematic lighting, 9:16
-6. Underground gold mine tunnel with pickaxe, just 3 feet before gold vein metaphor, dim lighting, perseverance concept, vertical composition, 9:16
-7. Small crack of golden light appearing in darkness, breakthrough moment, hope emerging, dramatic lighting contrast, 9:16 cinematic
-8. Beautiful sunrise breaking through storm clouds, rays of light piercing darkness, new hope and beginning concept, epic sky, 9:16
-9. Silhouette of person taking one determined step forward on mountain path, perseverance visualization, inspiring mood, golden hour lighting, 9:16
-10. Back view of person reaching towards bright goal just ahead, almost there concept, silhouette against light, inspirational composition, 9:16
-11. Hands holding small flickering candle in darkness, not giving up today concept, intimate close-up, emotional mood, 9:16
-12. Person's shadow stretching towards distant mountain peak, journey visualization, determination, cinematic landscape, 9:16
-13. Close-up of determined eyes with reflection of light, inner strength concept, emotional portrait, dramatic lighting, 9:16
-14. Silhouette standing at edge of cliff facing sunrise, overcoming fear, inspirational mood, epic landscape, 9:16
-15. Victory pose silhouette on mountain summit at golden hour, achievement and success, cityscape far below, cinematic composition, 9:16
+1. (이미지 프롬프트 1 - 영어, 9:16, 시네마틱, 50-180단어)
+2. (이미지 프롬프트 2)
+3. (이미지 프롬프트 3)
+...
+(10-15개 작성)
 ---PROMPTS_END---
 
 ---SCENES_START---
@@ -403,13 +359,20 @@
 6. lines: 11-12 | image: 6
 7. lines: 13-14 | image: 7
 8. lines: 15-16 | image: 8
+(대본 줄 수에 맞게 계속 - 모든 줄이 커버될 때까지)
 ---SCENES_END---
 
-⚠️ SCENES 설명:
-- lines: 대본 줄 번호 (1부터 시작)
-- image: PROMPTS의 이미지 번호
-- 모든 대본 줄이 빠짐없이 커버되어야 함
-- 대본 줄 수에 맞게 조정할 것`
+⚠️ SCENES 필수 규칙:
+- 대본의 모든 줄이 반드시 커버되어야 함
+- lines: 시작줄-끝줄 | image: 이미지번호
+- 이미지 번호는 PROMPTS의 순서 (1부터 시작)
+- 예: 대본이 20줄이면 SCENES에서 1-20줄 모두 매핑
+
+📌 이미지 프롬프트 규칙:
+- 완전한 영어 문장
+- 9:16 vertical composition 명시
+- 시네마틱/감성적 스타일
+- 사람 얼굴 피하거나 뒷모습/실루엣`
         }
     ];
 

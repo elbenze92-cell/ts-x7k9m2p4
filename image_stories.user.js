@@ -153,61 +153,32 @@
         },
         {
             name: "미드저니 프롬프트",
-            prompt: `🚨 CRITICAL: 아래 형식을 **정확히** 따라야 합니다!
+            prompt: `🚨🚨🚨 CRITICAL: 반드시 3개 마커 모두 출력해야 합니다! 🚨🚨🚨
+
+출력해야 할 마커 (하나라도 빠지면 실패):
+1. ---SCRIPT_START--- / ---SCRIPT_END---
+2. ---PROMPTS_START--- / ---PROMPTS_END---
+3. ---SCENES_START--- / ---SCENES_END---  ← 필수! 빠뜨리지 마!
 
 ⛔ 절대 금지:
+- 마커 생략 (3개 모두 필수!)
 - "Let me create..." 같은 메타 설명
-- "I need to..." 같은 과정 설명
 - 마커 밖에 어떠한 텍스트도 금지
-- 한국어 컨셉 설명 금지
 
-✅ 필수:
-- 마커 안에만 내용 작성
-- 이미지 프롬프트는 **영어**
-- 각 프롬프트는 **번호로 시작** (1. 2. 3. ...)
-- 15개 프롬프트 이상 (넉넉하게)
-- **SCRIPT + PROMPTS + SCENES 3개 모두 출력**
+---
 
-지금까지 작성한 최종 대본을 참고하여 각 문장에 해당하는 미드저니 프롬프트를 생성합니다.
-
-✅ 조건:
-- 극사실주의 기반
-- 인물은 각 나라의 언어에 맞게
-- 10-15개 프롬프트
-- 영어로 작성
-- **PROMPTS + SCENES 둘 다 출력**
-
-📌 이미지 프롬프트 작성 규칙:
-- 완전한 영어 문장
-- 9:16 명시
-- 시네마틱/감성적 스타일
-- 각 프롬프트 50-180단어
-
-🎯 출력 형식 (3개 마커 모두 출력):
-
-각 장면을 번호 붙여서 코드블럭으로 작성해주세요.
-⚠️ 이미지 프롬프트는 반드시 15개! 각각 번호(1. 2. 3...)로 시작하고 줄바꿈으로 구분!
+🎯 출력 형식 (이 순서대로 정확히 출력):
 
 ---SCRIPT_START---
-(11단계에서 출력한 최종 대본 전체를 여기에 다시 출력)
+(11단계 최종 대본 전체를 여기에)
 ---SCRIPT_END---
 
 ---PROMPTS_START---
-1. A silhouette of a person standing at crossroads during golden hour, dramatic lighting, cinematic composition, 9:16 vertical format
-2. Close-up of hands holding crumpled paper, dark moody atmosphere, shallow depth of field, 9:16 aspect ratio
-3. Person sitting alone on park bench at night, city lights blurred in background, melancholic mood, vertical composition
-4. Sunrise breaking through storm clouds, rays of light, hope and new beginning concept, dramatic sky, 9:16 format
-5. Back view of person climbing steep mountain path, determination concept, epic landscape, vertical cinematic shot
-6. Hands breaking through chains, freedom and breakthrough concept, dramatic lighting, dark background, 9:16
-7. Person standing on mountain peak with arms raised, victory pose, sunrise, inspirational mood, vertical format
-8. Close-up of eyes with reflection of sunrise, hope and vision concept, emotional portrait style, 9:16
-9. Person running towards bright light at end of tunnel, metaphor for success, dramatic composition, vertical
-10. Silhouette celebrating on rooftop at sunset, city skyline background, achievement concept, 9:16 cinematic
-11. Hands holding small flickering candle in darkness, not giving up today concept, intimate close-up, emotional mood, 9:16
-12. Person's shadow stretching towards distant mountain peak, journey visualization, determination, cinematic landscape, 9:16
-13. Close-up of determined eyes with reflection of light, inner strength concept, emotional portrait, dramatic lighting, 9:16
-14. Silhouette standing at edge of cliff facing sunrise, overcoming fear, inspirational mood, epic landscape, 9:16
-15. Victory pose silhouette on mountain summit at golden hour, achievement and success, cityscape far below, cinematic composition, 9:16
+1. (이미지 프롬프트 1 - 영어, 9:16, 극사실주의, 50-180단어)
+2. (이미지 프롬프트 2)
+3. (이미지 프롬프트 3)
+...
+(15개 이상 작성)
 ---PROMPTS_END---
 
 ---SCENES_START---
@@ -221,15 +192,19 @@
 8. lines: 15-16 | image: 8
 9. lines: 17-18 | image: 9
 10. lines: 19-20 | image: 10
+(대본 줄 수에 맞게 계속 - 모든 줄이 커버될 때까지)
 ---SCENES_END---
 
-⚠️ SCENES 설명:
-- lines: 대본 줄 번호 (1부터 시작)
-- image: PROMPTS의 이미지 번호
-- 모든 대본 줄이 빠짐없이 커버되어야 함
-- 대본 줄 수에 맞게 조정할 것
+⚠️ SCENES 필수 규칙:
+- 대본의 모든 줄이 반드시 커버되어야 함
+- lines: 시작줄-끝줄 | image: 이미지번호
+- 이미지 번호는 PROMPTS의 순서 (1부터 시작)
+- 예: 대본이 24줄이면 SCENES에서 1-24줄 모두 매핑
 
-⚠️ 위 예시처럼 각 프롬프트를 번호로 시작하고, 대본 내용에 맞게 장면을 수정해서 작성하세요!`
+📌 이미지 프롬프트 규칙:
+- 완전한 영어 문장
+- 9:16 vertical composition 명시
+- 극사실주의/시네마틱 스타일`
         }
     ];
 
