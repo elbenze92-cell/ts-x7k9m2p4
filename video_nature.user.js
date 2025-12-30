@@ -1753,3 +1753,4 @@ CHUNK_PLACEHOLDER
     
     console.log('✅ 팝업 차단 활성화');
 })();
+// trigger update 2025-12-31 06:51:01

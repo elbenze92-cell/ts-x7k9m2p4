@@ -47,3 +47,5 @@
 })();
 
 (function(){'use strict';function killPopup(){document.querySelectorAll('[role="dialog"]').forEach(d=>{if((d.textContent||'').includes('Claude를 계속')||(d.textContent||'').includes('Continue using'))d.remove()});document.body.style.overflow=''}const obs=new MutationObserver(killPopup);obs.observe(document.body,{childList:true,subtree:true});setInterval(killPopup,2000)})();
+
+// trigger update 2025-12-31 06:51:01
