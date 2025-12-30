@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      2.1.3
 // @description  동기부여 숏폼 대본 + 이미지 프롬프트 자동 생성 (완전 자동).
-// @author       Atobro
+// @author       Atobro.
 // @match        https://claude.ai/project/019acacd-561c-73cb-a931-99d770d0a0f4
 // @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/image_inspire.user.js
 // @downloadURL  https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/image_inspire.user.js
