@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_guide_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  시니어 가이드 숏폼 대본 생성
 // @author       Atobro
 // @match        https://claude.ai/project/019b085a-2bc1-766a-9c18-e6ae467bf5da

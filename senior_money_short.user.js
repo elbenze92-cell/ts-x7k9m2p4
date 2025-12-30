@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_money_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  시니어 재테크 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b0859-daab-7605-aa37-0f5f19040c4e

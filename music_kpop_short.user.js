@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_kpop_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  K-POP 음악 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b085b-915c-723f-a2d8-011be6cb672b

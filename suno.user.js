@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         !music Suno 생성 다운 (Python 연동) v3.0
 // @namespace    https://atobro.com/
-// @version      2.2.2
+// @version      2.2.3
 // @description  Suno 음악 생성 완전 자동화 - 생성, 완료 감지, 다운로드, Python 연동
 // @author       Atobro
 // @match        https://suno.com/*

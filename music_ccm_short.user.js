@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_ccm_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  CCM 음악 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b085b-5655-7309-97dc-46f7418b238f

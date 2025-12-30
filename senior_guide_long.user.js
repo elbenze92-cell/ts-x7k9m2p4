@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_guide_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  시니어 가이드 롱폼 20개 주제 생성
 // @author       Atobro
 // @match        https://claude.ai/project/019ad8ff-9135-73af-a695-9b82a73468cc

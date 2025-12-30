@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_beauty_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  시니어 뷰티/패션 롱폼 20개 주제
 // @author       Atobro
 // @match        https://claude.ai/project/019ad90c-344c-76dc-84f1-6dc31cb0c028

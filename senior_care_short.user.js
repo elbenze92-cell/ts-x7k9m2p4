@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_care_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  시니어 케어 숏폼 대본 생성
 // @author       Atobro
 // @match        https://claude.ai/project/019b085a-4903-7726-a10a-11b83da590cd

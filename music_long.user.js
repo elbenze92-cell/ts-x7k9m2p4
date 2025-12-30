@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         !music long 대본 자동화 (Python 연동)
 // @namespace    https://atobro.com/
-// @version      2.0.2
+// @version      2.0.3
 // @description  8개 음악 채널 대본 자동 생성 + Midjourney 프롬프트 + Python 연동
 // @author       Atobro
 // @match        https://chatgpt.com/*

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_trot_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  트로트 음악 롱폼 25곡
 // @author       Atobro
 // @match        https://claude.ai/project/019b085a-85cc-7098-942d-6d7c8485f196

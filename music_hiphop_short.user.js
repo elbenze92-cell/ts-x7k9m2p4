@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_hiphop_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  힙합 음악 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b085b-e0b5-710e-9441-cc593bd448fb

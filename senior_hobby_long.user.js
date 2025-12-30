@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_hobby_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  시니어 취미/여가 롱폼 20개 주제
 // @author       Atobro
 // @match        https://claude.ai/project/019ad90b-c99e-7143-a6c6-b1a5b5245cdc

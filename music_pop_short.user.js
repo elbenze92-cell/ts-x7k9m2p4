@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_pop_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  팝 음악 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b085b-aeef-74de-aba9-f75fe2941a91

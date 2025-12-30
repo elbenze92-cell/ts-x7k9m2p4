@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_edm_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  EDM 음악 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b085b-c82b-75b7-94ce-a892ff018602
