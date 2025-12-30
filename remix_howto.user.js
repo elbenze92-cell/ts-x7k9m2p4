@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Claude Automation - remix_howto
 // @namespace    http://tampermonkey.net/
-// @version      2.0.2
+// @version      2.0.3
 // @description  13단계 대본 생성 자동화 - 마지막에만 자동 저장ㅇ
 // @author       You
 // @match        https://claude.ai/project/019ad8fb-7a25-735a-983c-5c4ccd96b519

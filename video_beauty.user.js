@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         *create_video_viral.user 동영상 프롬프트
 // @namespace    http://tampermonkey.net/
-// @version      2.2.2
+// @version      2.2.3
 // @description  Remix 스타일의 고품질 Sora 프롬프트 자동 생성 (JSON 저장) - 안정화 버전
 // @match        https://claude.ai/project/019acaca-ea51-707c-8a8e-32e084dee17d
 // @updateURL    https://cdn.jsdelivr.net/gh/elbenze92-cell/ts-x7k9m2p4@main/video_beauty.user.js
