@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_travel_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 여행 롱폼 20개 주제
 // @author       Atobro
 // @match        https://claude.ai/project/019ad90b-39e4-71c5-aaa8-1c2f4043801c

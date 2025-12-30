@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_pop_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  팝 음악 롱폼 25곡
 // @author       Atobro
 // @match        https://claude.ai/project/019b085a-cc69-77c0-bc1f-d56f3f5e3289

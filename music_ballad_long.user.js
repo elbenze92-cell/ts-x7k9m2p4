@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_ballad_long
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  발라드 음악 롱폼 25곡 생성
 // @author       Atobro
 // @match        https://claude.ai/project/019b085b-22a3-70c5-a8cb-4752968eba78

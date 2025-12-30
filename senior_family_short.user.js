@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - senior_family_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  시니어 가족 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b0859-2b25-75d1-9c6e-93ecca1274eb

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Automation - music_lofi_short
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  로파이 음악 숏폼
 // @author       Atobro
 // @match        https://claude.ai/project/019b085c-1b2f-7768-a135-532f9fee4216
