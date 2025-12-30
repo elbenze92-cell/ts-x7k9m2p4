@@ -35,7 +35,13 @@ jobs:
           echo "🔢 버전 자동 증가 시작..."
           echo ""
           
-          changed_files=$(git diff-tree --no-commit-id --name-only -r HEAD | grep '\.user\.js$' || true)
+          # 🔥 Merge commit 대응 - 변경 파일 감지 개선
+          changed_files=$(git show --name-only --pretty="" HEAD | grep '\.user\.js$' || true)
+          
+          # 백업: 위에서 못 찾으면 diff로 재시도
+          if [ -z "$changed_files" ]; then
+            changed_files=$(git diff --name-only HEAD~1 HEAD | grep '\.user\.js$' || true)
+          fi
           
           if [ -z "$changed_files" ]; then
             echo "⚠️ 변경된 .user.js 파일 없음"
