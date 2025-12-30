@@ -822,13 +822,16 @@
                             const sceneLines = scenesText.split('\n').filter(line => line.trim().length > 5);
                             
                             for (const line of sceneLines) {
-                                // 형식: "1. lines: 1-2 | image: 1"
-                                const match = line.match(/^\d+\.\s*lines:\s*(\d+)-(\d+)\s*\|\s*image:\s*(\d+)/i);
-                                
-                                if (match) {
-                                    const startLine = parseInt(match[1]);
-                                    const endLine = parseInt(match[2]);
-                                    const imageIdx = parseInt(match[3]) - 1; // 0-based index
+                                  // 형식: "lines: 1-2 | image: 1" 또는 "1. lines: 1-2 | image: 1, 2"
+                                  // 🔥 번호 선택적, 이미지 여러 개 지원
+                                  const match = line.match(/(?:^\d+\.\s*)?lines:\s*(\d+)-(\d+)\s*\|\s*image:\s*([\d,\s]+)/i);
+                                  if (match) {
+                                      const startLine = parseInt(match[1]);
+                                      const endLine = parseInt(match[2]);
+                                      // 🔥 여러 이미지 중 첫 번째만 사용 (또는 파싱)
+                                      const imageStr = match[3].trim();
+                                      const firstImage = imageStr.split(/[,\s]+/)[0];
+                                      const imageIdx = parseInt(firstImage) - 1; // 0-based index
                                     
                                     // lines 배열 생성 (1-3 → [1, 2, 3])
                                     const lines = [];
